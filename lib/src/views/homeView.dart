@@ -19,8 +19,8 @@ class HomeView extends StatefulWidget{
 
 class _HomeViewState extends State<HomeView>{
 
-  Codec _codec = Codec.aacADTS;
-  String _mPath = 'https://resource.51ptt.net/ai/temp/tmm_ai_welcome.wav';
+  Codec _codec = Codec.aacMP4;
+  String _mPath = 'tau_file.mp4';
   bool recording = false;
 
   FlutterSoundPlayer? _mPlayer = FlutterSoundPlayer();
@@ -52,18 +52,18 @@ class _HomeViewState extends State<HomeView>{
     });
     super.initState();
 
-    Future.delayed(const Duration(seconds: 1),(){
+ /*   Future.delayed(const Duration(seconds: 1),(){
       print('***********delayed');
       _codec = Codec.aacADTS;
       _mPath = 'https://resource.51ptt.net/ai/temp/tmm_ai_welcome.wav';
       play();
-    });
+    });*/
   }
   void play() {
     _mPlayer!.startPlayer(
         fromURI: _mPath,
         // 'https://file-examples-com.github.io/uploads/2017/11/file_example_MP3_700KB.mp3',
-        codec: _codec,
+        // codec: _codec,
         whenFinished: () {
           setState(() {});
         })
