@@ -52,12 +52,12 @@ class _HomeViewState extends State<HomeView>{
     });
     super.initState();
 
-   // Future.delayed(const Duration(seconds: 1),(){
-   //    print('***********delayed');
-   //    _codec = Codec.pcm16WAV;
-   //    _mPath = 'https://resource.51ptt.net/ai/temp/tmm_ai_welcome.wav';
-   //    play();
-   //  });
+   Future.delayed(const Duration(seconds: 1),(){
+      print('***********delayed');
+      _codec = Codec.pcm16WAV;
+      _mPath = 'https://resource.51ptt.net/ai/temp/tmm_ai_welcome.wav';
+      play();
+    });
   }
   void play() {
     _mPlayer!.startPlayer(
