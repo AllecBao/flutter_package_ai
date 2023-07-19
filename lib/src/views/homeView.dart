@@ -52,7 +52,7 @@ class _HomeViewState extends State<HomeView>{
     });
     super.initState();
 
-   Future.delayed(const Duration(seconds: 1),(){
+   Future.delayed(const Duration(milliseconds: 500),(){
       print('***********delayed');
       _codec = Codec.pcm16WAV;
       _mPath = 'https://resource.51ptt.net/ai/temp/tmm_ai_welcome.wav';
@@ -73,8 +73,9 @@ class _HomeViewState extends State<HomeView>{
   }
 
   void record() async {
-    _mRecorder!
-        .startRecorder(
+    Codec _codec = Codec.aacMP4;
+    String _mPath = 'tau_file.mp4';
+    _mRecorder!.startRecorder(
       toFile: _mPath,
       codec: _codec,
       audioSource: AudioSource.microphone,
