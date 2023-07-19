@@ -6,10 +6,8 @@ class HomePage extends StatelessWidget{
 
   const HomePage({super.key});
   Widget build(BuildContext context){
-    return Scaffold(
-      body: const Center(
-        child: Text('Hello,world!'),
-      ),
+    return const Center(
+      child: Text('你说我是谁'),
     );
   }
 }
