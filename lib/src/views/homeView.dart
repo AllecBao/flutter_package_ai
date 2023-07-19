@@ -41,11 +41,11 @@ class _HomeViewState extends State<HomeView>{
   }
 
 
-  late SoundViewModel _viewModel;
+  //late SoundViewModel _viewModel;
   @override
   void initState() {
 
-    _viewModel = SoundViewModel().initSoundModel();
+    //_viewModel = SoundViewModel().initSoundModel();
     _mPlayer!.openPlayer();
     openTheRecorder();
 
