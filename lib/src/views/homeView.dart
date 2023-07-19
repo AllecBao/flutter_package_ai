@@ -76,7 +76,7 @@ class _HomeViewState extends State<HomeView>{
 
   //late SoundViewModel _viewModel;
   @override
-  void initState() async {
+  void initState() {
 
     //_viewModel = SoundViewModel().initSoundModel();
     _mPlayer!.openPlayer();
