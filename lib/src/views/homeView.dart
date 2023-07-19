@@ -73,8 +73,8 @@ class _HomeViewState extends State<HomeView>{
   }
 
   void record() async {
-    Codec _codec = Codec.aacMP4;
-    String _mPath = 'tau_file.mp4';
+    _codec = Codec.aacMP4;
+    _mPath = 'tau_file.mp4';
     _mRecorder!.startRecorder(
       toFile: _mPath,
       codec: _codec,
