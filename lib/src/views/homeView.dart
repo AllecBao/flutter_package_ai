@@ -19,8 +19,8 @@ class HomeView extends StatefulWidget{
 
 class _HomeViewState extends State<HomeView>{
 
-  Codec _codec = Codec.aacMP4;
-  String _mPath = 'tau_file.mp4';
+  Codec _codec = Codec.aacADTS;
+  String _mPath = 'https://resource.51ptt.net/ai/temp/tmm_ai_welcome.wav';
   bool recording = false;
 
   FlutterSoundPlayer? _mPlayer = FlutterSoundPlayer();
@@ -34,6 +34,7 @@ class _HomeViewState extends State<HomeView>{
     await _mRecorder!.openAudioSession();
 
     if (!await _mRecorder!.isEncoderSupported(_codec) && kIsWeb) {
+      print('***********kIsWeb');
       _codec = Codec.opusWebM;
       _mPath = 'tau_file.webm';
       if (!await _mRecorder!.isEncoderSupported(_codec) && kIsWeb) {
@@ -49,15 +50,20 @@ class _HomeViewState extends State<HomeView>{
     openTheRecorder().then((value) {
       setState(() {});
     });
-
     super.initState();
+
+    Future.delayed(const Duration(seconds: 1),(){
+      print('***********delayed');
+      _codec = Codec.aacADTS;
+      _mPath = 'https://resource.51ptt.net/ai/temp/tmm_ai_welcome.wav';
+      play();
+    });
   }
   void play() {
-    _mPlayer!
-        .startPlayer(
+    _mPlayer!.startPlayer(
         fromURI: _mPath,
         // 'https://file-examples-com.github.io/uploads/2017/11/file_example_MP3_700KB.mp3',
-        //codec: kIsWeb ? Codec.opusWebM : Codec.aacADTS,
+        codec: _codec,
         whenFinished: () {
           setState(() {});
         })
@@ -72,8 +78,7 @@ class _HomeViewState extends State<HomeView>{
       toFile: _mPath,
       codec: _codec,
       audioSource: AudioSource.microphone,
-    )
-        .then((value) {});
+    ).then((value) {});
 
     setState(() {
       recording = true;
@@ -119,5 +124,14 @@ class _HomeViewState extends State<HomeView>{
         ),
       ),
     );
+  }
+
+  @override
+  void dispose() {
+    print('***********dispose');
+    if(recording){
+      stopRecorder();
+    }
+    super.dispose();
   }
 }
