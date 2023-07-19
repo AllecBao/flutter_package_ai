@@ -3,10 +3,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/widgets.dart';
 import 'pages/homePage.dart';
-
-Widget getHomePage(){
-  return const HomePage();
-}
+import 'views/homeView.dart';
 
 showMainView(context){
 
@@ -15,6 +12,6 @@ showMainView(context){
       isScrollControlled: false,
       shape: const RoundedRectangleBorder(borderRadius: BorderRadius.only(topLeft: (Radius.circular(10)),topRight: (Radius.circular(10)))),
       builder: (BuildContext context){
-        return const HomePage();
+        return const HomeView();
       });
 }

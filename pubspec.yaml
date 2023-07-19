@@ -11,7 +11,10 @@ dependencies:
   flutter:
     sdk: flutter
   dio: ^5.0.0
-  crypto: ^2.0.6
+  crypto: ^3.0.0
+  flutter_sound: ^9.2.13
+  provider: ^6.0.0
+  permission_handler: ^9.2.0
 
 dev_dependencies:
   flutter_test:

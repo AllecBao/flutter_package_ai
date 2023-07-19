@@ -2,7 +2,7 @@ import 'package:dio/dio.dart';
 import '../utils/userUtil.dart';
 import '../common/constant.dart';
 import 'dart:convert';
-import 'package:convert/convert.dart';
+// import 'package:convert/convert.dart';
 import 'package:crypto/crypto.dart';
 
 class RequestService{
@@ -10,9 +10,12 @@ class RequestService{
 
   //Md5加密
   String toMd5(String data){
-    var content = new Utf8Encoder().convert(data);
-    var digest = md5.convert(content);
-    return hex.encode(digest.bytes);
+    var bytes = utf8.encode(data);
+    final dig = md5.convert(bytes);
+    return dig.toString();
+    // var content = new Utf8Encoder().convert(data);
+    // var digest = md5.convert(content);
+    // return hex.encode(digest.bytes);
   }
 
   RequestService() : _dio= Dio() {
