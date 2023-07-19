@@ -52,18 +52,18 @@ class _HomeViewState extends State<HomeView>{
     });
     super.initState();
 
- /*   Future.delayed(const Duration(seconds: 1),(){
-      print('***********delayed');
-      _codec = Codec.aacADTS;
-      _mPath = 'https://resource.51ptt.net/ai/temp/tmm_ai_welcome.wav';
-      play();
-    });*/
+   // Future.delayed(const Duration(seconds: 1),(){
+   //    print('***********delayed');
+   //    _codec = Codec.pcm16WAV;
+   //    _mPath = 'https://resource.51ptt.net/ai/temp/tmm_ai_welcome.wav';
+   //    play();
+   //  });
   }
   void play() {
     _mPlayer!.startPlayer(
         fromURI: _mPath,
         // 'https://file-examples-com.github.io/uploads/2017/11/file_example_MP3_700KB.mp3',
-        // codec: _codec,
+        codec: _codec,
         whenFinished: () {
           setState(() {});
         })
