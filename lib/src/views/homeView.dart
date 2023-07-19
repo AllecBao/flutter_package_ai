@@ -1,6 +1,9 @@
 
+import 'dart:io';
+
 import 'package:flutter/material.dart';
 import 'package:flutter/widgets.dart';
+import 'package:path_provider/path_provider.dart';
 import 'package:permission_handler/permission_handler.dart';
 import '../viewModel/soundViewModel.dart';
 import 'package:flutter/foundation.dart' show kIsWeb;
@@ -16,8 +19,8 @@ class HomeView extends StatefulWidget{
 
 class _HomeViewState extends State<HomeView>{
 
-  Codec _codec = Codec.aacMP4;
-  String _mPath = 'tau_file.mp4';
+  Codec _codec = Codec.aacADTS;
+  String _mPath = '';
   bool recording = false;
 
   FlutterSoundPlayer? _mPlayer = FlutterSoundPlayer();
@@ -52,7 +55,6 @@ class _HomeViewState extends State<HomeView>{
     await getPermissionStatus().then((value) async {
       if (!value) {
         throw RecordingPermissionException('Microphone permission not granted');
-        return;
       }
     });
     // var status = await Permission.microphone.request();
@@ -62,22 +64,23 @@ class _HomeViewState extends State<HomeView>{
     await _mRecorder!.openRecorder();
     // await _mRecorder!._openAudioSession();
 
-    if (!await _mRecorder!.isEncoderSupported(_codec) && kIsWeb) {
-      _codec = Codec.opusWebM;
-      _mPath = 'tau_file.webm';
-      if (!await _mRecorder!.isEncoderSupported(_codec) && kIsWeb) {
-        return;
-      }
-    }
+    // if (!await _mRecorder!.isEncoderSupported(_codec) && kIsWeb) {
+      _codec = Codec.aacADTS;
+      _mPath = '';
+      // if (!await _mRecorder!.isEncoderSupported(_codec) && kIsWeb) {
+      //   return;
+      // }
+    // }
   }
 
 
   //late SoundViewModel _viewModel;
   @override
-  void initState() {
+  void initState() async {
 
     //_viewModel = SoundViewModel().initSoundModel();
     _mPlayer!.openPlayer();
+    //开启录音
     openTheRecorder();
 
     super.initState();
@@ -97,17 +100,29 @@ class _HomeViewState extends State<HomeView>{
     });
   }
 
-  void record() async {
-    _mRecorder!
-        .startRecorder(
-      toFile: _mPath,
-      codec: _codec,
-      audioSource: AudioSource.microphone,
-    )
-        .then((value) {});
+  void startRecord() async {
+    await getPermissionStatus().then((value) async {
+      if (!value) {
+        return;
+      }
+      //用户允许使用麦克风之后开始录音
+      Directory tempDir = await getTemporaryDirectory();
+      var time = DateTime
+          .now()
+          .millisecondsSinceEpoch;
+      _mPath = '${tempDir.path}/$time${ext[Codec.aacADTS.index]}';
 
-    setState(() {
-      recording = true;
+      _mRecorder!.startRecorder(
+        toFile: _mPath,
+        codec: _codec,
+        audioSource: AudioSource.microphone,
+      ).then((value) {
+
+      });
+
+      setState(() {
+        recording = true;
+      });
     });
   }
 
@@ -142,7 +157,7 @@ class _HomeViewState extends State<HomeView>{
                   if (recording) {
                     stopRecorder();
                   } else {
-                    record();
+                    startRecord();
                   }
                 },
                 child: Text(recording ? 'Stop' : 'Record'))
