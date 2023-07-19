@@ -65,8 +65,8 @@ class _HomeViewState extends State<HomeView>{
     // await _mRecorder!._openAudioSession();
 
     // if (!await _mRecorder!.isEncoderSupported(_codec) && kIsWeb) {
-      _codec = Codec.aacADTS;
-      _mPath = '';
+    //   _codec = Codec.aacADTS;
+    //   _mPath = '';
       // if (!await _mRecorder!.isEncoderSupported(_codec) && kIsWeb) {
       //   return;
       // }
@@ -81,8 +81,9 @@ class _HomeViewState extends State<HomeView>{
     //_viewModel = SoundViewModel().initSoundModel();
     _mPlayer!.openPlayer();
     //开启录音
-    openTheRecorder();
+    openTheRecorder().then((value) => {
 
+    });
     super.initState();
   }
 
