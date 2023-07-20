@@ -1,6 +1,7 @@
 
 import 'dart:io';
 
+import 'package:dio/dio.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/widgets.dart';
 import 'package:path_provider/path_provider.dart';
@@ -97,8 +98,9 @@ class _HomeViewState extends State<HomeView>{
       });
     });
     var path = await _mRecorder!.getRecordURL(path: _mPath);
+    var file = await MultipartFile.fromFile(path!);
     // print('======path:'+path!);
-    File file = File(path!);
+    // File file = File(path!);
     var data = {
       'file': file
     };
@@ -109,92 +111,94 @@ class _HomeViewState extends State<HomeView>{
   @override
   Widget build(BuildContext context){
     return Center(
-      child: Container(
-        margin: EdgeInsets.all(15),
-        decoration: BoxDecoration(
-            color: Colors.black87,
-            borderRadius: BorderRadius.all(Radius.circular(10))
-        ),
-        height: 240,
-        child: Row(
-          children: [
-            Expanded(flex: 2,child: Column(
-              mainAxisAlignment: MainAxisAlignment.center,
-              children: [
-                Container(
-                  child: Image.network('https://ptt-resource.oss-cn-hangzhou.aliyuncs.com/ptt/images/ai_logo.png',
-                    width: 100,
-                    height: 100,
-                  ),
-                ),
-                SizedBox(height: 15),
-                Container(
-                  width: 100,
-                  height: 30,
-                  decoration: BoxDecoration(
-                      borderRadius: BorderRadius.all(Radius.circular(15)),
-                      border: Border.all(color:Colors.grey)
-                  ),
-
-                  child: Text('小助手正在听',style: TextStyle(
-                    color: Colors.white,
-                  ),
-                    textAlign: TextAlign.center,
-
-                  ),
-                )
-              ],
-            )),
-            Expanded(flex: 3,child: Container(
-              child:Row(
+      child: AspectRatio(
+        aspectRatio: 3/2,
+        child: Container(
+          margin: EdgeInsets.all(15),
+          decoration: BoxDecoration(
+              color: Colors.black87,
+              borderRadius: BorderRadius.all(Radius.circular(10))
+          ),
+          child: Row(
+            children: [
+              Expanded(flex: 2,child: Column(
+                mainAxisAlignment: MainAxisAlignment.center,
                 children: [
-                  SizedBox(
-                    width: 3,
+                  Container(
+                    child: Image.network('https://ptt-resource.oss-cn-hangzhou.aliyuncs.com/ptt/images/ai_logo.png',
+                      width: 100,
+                      height: 100,
+                    ),
                   ),
-                  ElevatedButton(
-                      onPressed: () {
-                        play();
-                      },
-                      child: Text('Play')),
-                  SizedBox(
-                    width: 20,
-                  ),
-                  // 一般播放和录音没啥关系
-                  ElevatedButton(
-                      onPressed: () {
-                        if (recording) {
-                          stopRecorder();
-                        } else {
-                          record();
-                        }
-                      },
-                      child: Text(recording ? 'Stop' : 'Record'))
+                  SizedBox(height: 15),
+                  Container(
+                    width: 100,
+                    height: 30,
+                    decoration: BoxDecoration(
+                        borderRadius: BorderRadius.all(Radius.circular(15)),
+                        border: Border.all(color:Colors.grey)
+                    ),
+
+                    child: Text('小助手正在听',style: TextStyle(
+                      color: Colors.white,
+                    ),
+                      textAlign: TextAlign.center,
+
+                    ),
+                  )
                 ],
-              ),
-              // Column(
-              //   mainAxisAlignment: MainAxisAlignment.center,
-              //   children: [
-              //     Container(child: Text('你可以这样说',
-              //       style: TextStyle(
-              //         color: Colors.white,
-              //         fontSize: 16,
-              //       ),
-              //     )),
-              //     SizedBox(
-              //       height: 20,
-              //     ),
-              //     // 一般播放和录音没啥关系
-              //     Container(child: Text( '“我想要活酵母”',
-              //       style: TextStyle(
-              //           color: Colors.white,
-              //           fontSize: 22,
-              //           fontWeight: FontWeight.bold
-              //       ),
-              //     )),
-              //   ],
-              // ),
-            ))
-          ],
+              )),
+              Expanded(flex: 3,child: Container(
+                child:Row(
+                  children: [
+                    SizedBox(
+                      width: 3,
+                    ),
+                    ElevatedButton(
+                        onPressed: () {
+                          play();
+                        },
+                        child: Text('Play')),
+                    SizedBox(
+                      width: 20,
+                    ),
+                    // 一般播放和录音没啥关系
+                    ElevatedButton(
+                        onPressed: () {
+                          if (recording) {
+                            stopRecorder();
+                          } else {
+                            record();
+                          }
+                        },
+                        child: Text(recording ? 'Stop' : 'Record'))
+                  ],
+                ),
+                // Column(
+                //   mainAxisAlignment: MainAxisAlignment.center,
+                //   children: [
+                //     Container(child: Text('你可以这样说',
+                //       style: TextStyle(
+                //         color: Colors.white,
+                //         fontSize: 16,
+                //       ),
+                //     )),
+                //     SizedBox(
+                //       height: 20,
+                //     ),
+                //     // 一般播放和录音没啥关系
+                //     Container(child: Text( '“我想要活酵母”',
+                //       style: TextStyle(
+                //           color: Colors.white,
+                //           fontSize: 22,
+                //           fontWeight: FontWeight.bold
+                //       ),
+                //     )),
+                //   ],
+                // ),
+              ))
+            ],
+          ),
         ),
       ),
     );
