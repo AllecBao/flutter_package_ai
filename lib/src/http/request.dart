@@ -20,7 +20,7 @@ class RequestService{
 
   RequestService() : _dio= Dio() {
     _dio.options.baseUrl = Constant.baseUrl;
-    _dio.options.connectTimeout = const Duration(seconds: 6);
+    _dio.options.connectTimeout = const Duration(seconds: 8);
 
     //拦截器
     _dio.interceptors.add(
@@ -40,7 +40,6 @@ class RequestService{
             return handler.next(options);
           },
           onResponse: (Response response, ResponseInterceptorHandler handler){
-
             return handler.next(response);
           }
         )

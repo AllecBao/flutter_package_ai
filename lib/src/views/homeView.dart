@@ -4,6 +4,7 @@ import 'dart:io';
 import 'package:dio/dio.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/widgets.dart';
+import 'package:fluttertoast/fluttertoast.dart';
 import 'package:path_provider/path_provider.dart';
 import 'package:permission_handler/permission_handler.dart';
 import '../viewModel/soundViewModel.dart';
@@ -54,8 +55,7 @@ class _HomeViewState extends State<HomeView>{
     });
     super.initState();
 
-   Future.delayed(const Duration(milliseconds: 500),(){
-      print('***********delayed');
+   Future.delayed(const Duration(milliseconds: 200),(){
       _codec = Codec.pcm16WAV;
       _mPath = 'https://resource.51ptt.net/ai/temp/tmm_ai_welcome.wav';
       play();
@@ -99,13 +99,29 @@ class _HomeViewState extends State<HomeView>{
     });
     var path = await _mRecorder!.getRecordURL(path: _mPath);
     var file = await MultipartFile.fromFile(path!);
-    // print('======path:'+path!);
-    // File file = File(path!);
-    var data = {
-      'file': file
-    };
-    var res = await Api.voiceToTextToSkip(data);
+    var formData = FormData.fromMap({
+      'file':file
+    });
+    var res = await Api.voiceToTextToSkip(formData);
+    if(res.code == '10000'){
+      var data = {
+        "isNativePage":res.res["nativePage"],
+        "url":res.res["url"]
+      };
+      Fluttertoast.showToast(msg: '恭喜你获取成功！');
+      print(data);
+    }else{
+      var msg = res.msg;
+      Fluttertoast.showToast(msg: msg);
+    }
     print(res);
+  }
+
+  void navPopUp(){
+   var canpop = Navigator.canPop(context);
+   if(canpop){
+     Navigator.pop(context);
+   }
   }
 
   @override
@@ -156,7 +172,7 @@ class _HomeViewState extends State<HomeView>{
                     ),
                     ElevatedButton(
                         onPressed: () {
-                          play();
+                          navPopUp();
                         },
                         child: Text('Play')),
                     SizedBox(
