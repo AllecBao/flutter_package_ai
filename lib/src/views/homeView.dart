@@ -9,6 +9,7 @@ import '../viewModel/soundViewModel.dart';
 import 'package:flutter/foundation.dart' show kIsWeb;
 import 'package:flutter_sound/flutter_sound.dart';
 import 'package:flutter_sound_platform_interface/flutter_sound_recorder_platform_interface.dart';
+import '../http/api.dart';
 
 class HomeView extends StatefulWidget{
   const HomeView({Key? key}) : super(key: key);
@@ -83,10 +84,10 @@ class _HomeViewState extends State<HomeView>{
         recording = true;
       });
     });
-    _mRecorder!.onProgress!.listen((e) {
-      print('========processduration:'+e.duration.toString());
-      print('========processdecibels:'+e.decibels.toString());
-    });
+    // _mRecorder!.onProgress!.listen((e) {
+    //   print('========processduration:'+e.duration.toString());
+    //   print('========processdecibels:'+e.decibels.toString());
+    // });
   }
 
   void stopRecorder() async {
@@ -95,6 +96,14 @@ class _HomeViewState extends State<HomeView>{
         recording = false;
       });
     });
+    var path = await _mRecorder!.getRecordURL(path: _mPath);
+    // print('======path:'+path!);
+    File file = File(path!);
+    var data = {
+      'file': file
+    };
+    var res = await Api.voiceToTextToSkip(data);
+    print(res);
   }
 
   @override
