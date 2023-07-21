@@ -5,10 +5,12 @@ import 'package:dio/dio.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/widgets.dart';
 import 'package:fluttertoast/fluttertoast.dart';
+import 'package:just_audio/just_audio.dart';
 import 'package:path_provider/path_provider.dart';
 import 'package:ptt_ai_package/src/model/soundModel.dart';
 import '../viewModel/soundViewModel.dart';
 import '../http/api.dart';
+// import '../assets/audio/sound_start.wav';
 
 class HomeView extends StatefulWidget{
   const HomeView({Key? key}) : super(key: key);
@@ -19,14 +21,20 @@ class HomeView extends StatefulWidget{
 
 class _HomeViewState extends State<HomeView>{
 
+  final _player = AudioPlayer();
+  final audioStart = '../assets/audio/sound_start.wav';
+  final audioEnd = '../assets/audio/sound_end.mp3';
+
   @override
   void initState() {
 
     super.initState();
-
+    audioPlay(audioStart);
   }
-  void play() {
+  void audioPlay(audioUrl) async{
 
+    await _player.setFilePath(audioUrl);;
+    await _player.play();
   }
 
   void record() {
@@ -119,6 +127,7 @@ class _HomeViewState extends State<HomeView>{
 
   @override
   void dispose() {
+    _player.dispose();
     super.dispose();
   }
 }

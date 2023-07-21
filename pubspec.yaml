@@ -19,6 +19,7 @@ dependencies:
 #  permission_handler: ^6.0.1
   fluttertoast: ^8.2.0
   json_annotation: ^4.5.0
+  just_audio: ^0.9.34
 
 dev_dependencies:
   flutter_test:
