@@ -24,7 +24,10 @@ showMainView(context){
             color: Color(0x00000001),
             child: Expanded(
               flex: 1,
-              child: HomeView(),
+              child: GestureDetector(
+                onTap: (){},
+                child: HomeView(),
+              ),
             ),
           ),
         );
