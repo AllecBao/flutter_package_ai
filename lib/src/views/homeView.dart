@@ -57,9 +57,10 @@ class _HomeViewState extends State<HomeView>{
     super.initState();
 
    Future.delayed(const Duration(milliseconds: 200),(){
-      _codec = Codec.pcm16WAV;
-      _mPath = 'https://resource.51ptt.net/ai/temp/tmm_ai_welcome.wav';
-      play();
+      // _codec = Codec.pcm16WAV;
+      // _mPath = 'https://resource.51ptt.net/ai/temp/tmm_ai_welcome.wav';
+      // play();
+     record();
     });
   }
   void play() {
@@ -144,51 +145,52 @@ class _HomeViewState extends State<HomeView>{
               children: [
                 Expanded(
                     flex: 1,
-                    child: Stack(
+                    child: Container()
+                ),
+                Expanded(
+                    flex: 1,
+                    child:Stack(
                       children: [
                         Positioned(
-                            top: 0,
-                            left: 0,
-                            child:  Expanded(
-                              flex: 1,
-                              child: Column(
-                                mainAxisAlignment: MainAxisAlignment.center,
-                                children: [
-                                  Container(child: Text('你可以这样说',
-                                    style: TextStyle(
-                                      color: Colors.white,
-                                      fontSize: 16,
-                                    ),
-                                  )),
-                                  SizedBox(
-                                    height: 20,
-                                  ),
-                                  // 一般播放和录音没啥关系
-                                  Container(child: Text( '“我想要活酵母”',
-                                    style: TextStyle(
-                                        color: Colors.white,
-                                        fontSize: 22,
-                                        fontWeight: FontWeight.bold
-                                    ),
-                                  )),
-                                ],
-                              ),
-                            )
-                        ),
-                        Positioned(
+                          top:20,
+                          right: 20,
                           child: GestureDetector(
                             onTap: (){
-                              navPopUp();
+                              stopRecorder();
+                              // navPopUp();
                             },
-                            child: Icon(Icons.close,size: 40,color: Colors.white,),
+                            child: Icon(Icons.close,size: 25,color: Colors.white,),
                           ),
-                          top: 10,
-                          right: 10,
+                        ),
+                        Column(
+                          mainAxisAlignment: MainAxisAlignment.center,
+                          children: [
+
+                            Container(child: Text('你可以这样说',
+                              style: TextStyle(
+                                color: Colors.white,
+                                fontSize: 16,
+                              ),
+                            )),
+                            SizedBox(
+                              height: 20,
+                            ),
+                            // 一般播放和录音没啥关系
+                            Container(child: Text( '“我想要活酵母”',
+                              style: TextStyle(
+                                  color: Colors.white,
+                                  fontSize: 22,
+                                  fontWeight: FontWeight.bold
+                              ),
+                            )),
+                            SizedBox(
+                              height: 30,
+                            ),
+                          ],
                         )
                       ],
                     )
-                )
-
+                ),
               ],
             ),
           )
