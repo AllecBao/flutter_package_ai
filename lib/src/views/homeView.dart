@@ -56,7 +56,7 @@ class _HomeViewState extends State<HomeView>{
     });
     super.initState();
 
-   Future.delayed(const Duration(milliseconds: 200),(){
+   Future.delayed(const Duration(milliseconds: 400),(){
       // _codec = Codec.pcm16WAV;
       // _mPath = 'https://resource.51ptt.net/ai/temp/tmm_ai_welcome.wav';
       // play();
@@ -83,6 +83,11 @@ class _HomeViewState extends State<HomeView>{
       codec: _codec,
       audioSource: AudioSource.microphone,
     ).then((value) {
+      if(_mRecorder!.isRecording){
+        print('-------true');
+      }else{
+        print('-------false');
+      }
       setState(() {
         recording = true;
       });
@@ -162,6 +167,7 @@ class _HomeViewState extends State<HomeView>{
                             child: Container(
                               width: 60,
                               height: 60,
+                              color: Color(0x00000001),
                             ),
                           ),
                         ),
