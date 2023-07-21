@@ -11,8 +11,9 @@ SoundModel _$SoundModelFromJson(Map<String, dynamic> json) => SoundModel(
       type: json['type'] as String?,
       url: json['url'] as String?,
       nativePage: json['nativePage'] as String?,
-      maybes:
-          (json['maybes'] as List<dynamic>?)?.map((e) => e as String?).toList(),
+      maybes: (json['maybes'] as List<dynamic>?)
+          ?.map((e) => e as Map<String, dynamic>)
+          .toList(),
       texts:
           (json['texts'] as List<dynamic>?)?.map((e) => e as String?).toList(),
     );

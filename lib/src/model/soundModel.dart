@@ -15,7 +15,7 @@ class SoundModel{
   String? type;
   String? url;
   String? nativePage;
-  List<String?>? maybes;
+  List<Map<String, dynamic>>? maybes;
   List<String?>? texts;
   factory SoundModel.fromJson(Map<String, dynamic> json) => _$SoundModelFromJson(json);
   Map<String,dynamic> toJson() => _$SoundModelToJson(this);
