@@ -159,7 +159,10 @@ class _HomeViewState extends State<HomeView>{
                               stopRecorder();
                               // navPopUp();
                             },
-                            child: Icon(Icons.close,size: 25,color: Colors.white,),
+                            child: Container(
+                              width: 60,
+                              height: 60,
+                            ),
                           ),
                         ),
                         Column(
@@ -184,7 +187,7 @@ class _HomeViewState extends State<HomeView>{
                               ),
                             )),
                             SizedBox(
-                              height: 30,
+                              height: 40,
                             ),
                           ],
                         )
