@@ -37,9 +37,11 @@ class _HomeViewState extends State<HomeView> with WidgetsBindingObserver {
 
   @override
   void initState() {
-    WidgetsBinding.instance.addObserver(this);
-    record();
     super.initState();
+    WidgetsBinding.instance.addObserver(this);
+    WidgetsBinding.instance.addPostFrameCallback((timeStamp) {
+      record();
+    });
   }
 
   Future<void> audioPlay(String url) async {

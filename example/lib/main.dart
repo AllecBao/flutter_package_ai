@@ -27,7 +27,7 @@ class _MyAppState extends State<MyApp> {
               child: InkWell(
                 child: const Text('点击弹出ai'),
                 onTap: () async{
-                 showMainView(context);
+                 showMainView(context,time: 12345678);
                 },
               ),
             );
