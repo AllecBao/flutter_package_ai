@@ -22,7 +22,7 @@ dependencies:
   json_annotation: ^4.5.0
   flutter_easyloading: ^3.0.5
   just_audio: ^0.9.34
-  path: 1.8.1
+  path: ^1.8.1
 
 dev_dependencies:
   flutter_test:
