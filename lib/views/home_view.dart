@@ -12,7 +12,8 @@ import '../model/sound_model.dart';
 import '../utils/file_util.dart';
 
 class HomeView extends StatefulWidget {
-  const HomeView({Key? key}) : super(key: key);
+  final int? time;
+  const HomeView({Key? key,this.time}) : super(key: key);
 
   @override
    createState() => _HomeViewState();
@@ -173,7 +174,7 @@ class _HomeViewState extends State<HomeView> with WidgetsBindingObserver {
                 //   package: 'ptt_ai_package',
                 // ),
                 image: NetworkImage(
-                    'https://ptt-resource.oss-cn-hangzhou.aliyuncs.com/ptt/images/img_aidialog_bg.png?time=${DateTime.now().millisecondsSinceEpoch}',),
+                    'https://ptt-resource.oss-cn-hangzhou.aliyuncs.com/ptt/images/img_aidialog_bg.png?time=${widget.time ??  DateTime.now().millisecondsSinceEpoch}',),
               ),
             ),
             child: AspectRatio(

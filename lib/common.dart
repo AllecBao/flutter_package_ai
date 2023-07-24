@@ -6,7 +6,7 @@ import 'views/home_view.dart';
 /// 返回数据格式：{'errorMsg': '麦克风权限未打开','errorType':'1'}
 /// errorType：0接口错误信息，1授权错误
 /// {"isNativePage": 是否是web地址, "url": 路由地址}
-Future<dynamic> showMainView(context) async {
+Future<dynamic> showMainView(context,{int? time}) async {
   return await showModalBottomSheet(
       context: context,
       routeSettings: const RouteSettings(name: '/ptt/aiDialog'),
@@ -25,7 +25,7 @@ Future<dynamic> showMainView(context) async {
               Navigator.pop(context);
             }
           },
-          child: const HomeView(),
+          child:  HomeView(time: time,),
         );
       });
 }
