@@ -1,6 +1,6 @@
 import 'dart:async';
 
-import 'package:dio/dio.dart';
+import 'package:dio/dio.dart' as dio;
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_sound_record/flutter_sound_record.dart';
@@ -26,10 +26,13 @@ class _HomeViewState extends State<HomeView> with WidgetsBindingObserver {
   int stopCount = 0;
   int talkTime = 0;
   final _player = AudioPlayer();
-  final audioStart =
-      'https://ptt-resource.oss-cn-hangzhou.aliyuncs.com/ai/audios/sound_start.wav';
-  final audioEnd =
-      'https://ptt-resource.oss-cn-hangzhou.aliyuncs.com/ai/audios/sound_end.mp3';
+
+  // final audioStart =
+  //     'https://ptt-resource.oss-cn-hangzhou.aliyuncs.com/ai/audios/sound_start.wav';
+  final audioStart = 'assets/audio/sound_start.wav';
+
+  // final audioEnd =
+  //     'https://ptt-resource.oss-cn-hangzhou.aliyuncs.com/ai/audios/sound_end.mp3';
   int recording = 1; // 0:录音处理中 1:正在录音 2:录音失败
 
   @override
@@ -41,7 +44,11 @@ class _HomeViewState extends State<HomeView> with WidgetsBindingObserver {
 
   Future<void> audioPlay(String url) async {
     _player.stop();
-    await _player.setUrl(url);
+    await _player.setAsset(
+      url,
+      package: 'ptt_ai_package',
+    );
+    // await _player.setUrl(url);
     await _player.play();
   }
 
@@ -60,31 +67,33 @@ class _HomeViewState extends State<HomeView> with WidgetsBindingObserver {
         );
         _ampTimer =
             Timer.periodic(const Duration(milliseconds: 200), (Timer t) async {
-          talkTime++;
-          if (talkTime > 15 * 5) {
-            talkTime = 0;
-            stopRecorder();
-            return;
-          }
-          _amplitude = await _audioRecorder.getAmplitude();
-          final amplitudeCurrent = _amplitude?.current;
-          if (amplitudeCurrent != null) {
-            if (amplitudeCurrent < -30) {
-              stopCount++;
-              if (stopCount >= 8) {
-                stopCount = 0;
+              talkTime++;
+              if (talkTime > 15 * 5) {
+                talkTime = 0;
                 stopRecorder();
+                return;
               }
-            } else {
-              stopCount = 0;
-            }
-          }
+              _amplitude = await _audioRecorder.getAmplitude();
+              final amplitudeCurrent = _amplitude?.current;
+              if (amplitudeCurrent != null) {
+                if (amplitudeCurrent < -30) {
+                  stopCount++;
+                  if (stopCount >= 8) {
+                    stopCount = 0;
+                    stopRecorder();
+                  }
+                } else {
+                  stopCount = 0;
+                }
+              }
 
-          print(
-              '----->>>>>>>>${DateTime.now().millisecondsSinceEpoch}------>>>>${_amplitude?.current}');
-        });
+            });
       } else {
-        Fluttertoast.showToast(msg: '请开启麦克风权限', gravity: ToastGravity.CENTER);
+        Fluttertoast.showToast(msg: '请开启麦克风权限', gravity: ToastGravity.CENTER)
+            .then((value) {
+          var nav = Navigator.of(context);
+          nav.pop(false);
+        });
       }
     } catch (e) {}
   }
@@ -95,8 +104,8 @@ class _HomeViewState extends State<HomeView> with WidgetsBindingObserver {
     final String? path = await _audioRecorder.stop();
     // audioPlay(audioEnd);
     if (path != null && path.isNotEmpty) {
-      var file = await MultipartFile.fromFile(path);
-      var formData = FormData.fromMap({'file': file});
+      var file = await dio.MultipartFile.fromFile(path);
+      var formData = dio.FormData.fromMap({'file': file});
 
       setState(() {
         recording = 0;
@@ -125,7 +134,6 @@ class _HomeViewState extends State<HomeView> with WidgetsBindingObserver {
 
         print(data);
       } else {
-
         setState(() {
           recording = 2;
         });
@@ -152,128 +160,135 @@ class _HomeViewState extends State<HomeView> with WidgetsBindingObserver {
 
   @override
   Widget build(BuildContext context) {
-    return Center(
-      child: Container(
+    return Scaffold(
+      backgroundColor: Colors.transparent,
+      body: Center(
+        child: Container(
           decoration: const BoxDecoration(
             borderRadius: BorderRadius.all(
               Radius.circular(10),
             ),
             image: DecorationImage(
-              image: NetworkImage(
-                  'https://ptt-resource.oss-cn-hangzhou.aliyuncs.com/ptt/images/img_aidialog_bg.png'),
+              image: AssetImage(
+                'assets/images/img_aidialog_bg.png',
+                package: 'ptt_ai_package',
+              ),
+              // image: NetworkImage(
+              //     'https://ptt-resource.oss-cn-hangzhou.aliyuncs.com/ptt/images/img_aidialog_bg.png'),
             ),
           ),
           child: AspectRatio(
             aspectRatio: 3 / 2,
-            child: Row(
-              children: [
-                Expanded(
-                  flex: 4,
-                  child: Container(),
-                ),
-                Expanded(
-                    flex: 5,
-                    child: Stack(
-                      children: [
-                        Positioned(
-                          top: 20,
-                          right: 20,
-                          child: GestureDetector(
-                            onTap: () {
-                              // stopRecorder();
-                              navPopUp();
-                            },
-                            child: Container(
-                              width: 60,
-                              height: 60,
-                              color: const Color(0x00000001),
+            child: Container(
+              margin: const EdgeInsets.symmetric(horizontal: 18,vertical: 33),
+              child: Row(
+                children: [
+                  Expanded(
+                    flex: 4,
+                    child: Container(
+                    ),
+                  ),
+                  Expanded(
+                      flex: 5,
+                      child: Stack(
+                        children: [
+                          Positioned(
+                            top: 20,
+                            right: 20,
+                            child: GestureDetector(
+                              onTap: () {
+                                // stopRecorder();
+                                navPopUp();
+                              },
+                              child: Container(
+                                width: 60,
+                                height: 60,
+                                color: const Color(0x00000001),
+                              ),
                             ),
                           ),
-                        ),
-                        Column(
-                          mainAxisAlignment: MainAxisAlignment.center,
-                          children: [
-                            const Text(
-                              '你可以这样说',
-                              style: TextStyle(
-                                color: Colors.white,
-                                fontSize: 16,
-                              ),
-                            ),
-                            const SizedBox(
-                              height: 20,
-                            ),
-                            // 一般播放和录音没啥关系
-                            const Text(
-                              '“我想要活酵母”',
-                              style: TextStyle(
-                                color: Colors.white,
-                                fontSize: 22,
-                                fontWeight: FontWeight.bold,
-                              ),
-                            ),
-                            const SizedBox(
-                              height: 10,
-                            ),
-                            if (recording == 1)
-                              Center(
-                                child: Image.network(
-                                  'https://ptt-resource.oss-cn-hangzhou.aliyuncs.com/ptt/images/audio_record.gif',
-                                  height: 35,
-                                  fit: BoxFit.contain,
+                          SizedBox(
+                            width: double.infinity,
+                            child: Column(
+                              mainAxisAlignment: MainAxisAlignment.center,
+                              children: [
+                                const Text(
+                                  '你可以这样说',
+                                  style: TextStyle(
+                                    color: Colors.white,
+                                    fontSize: 16,
+                                  ),
                                 ),
-                              )
-
-                            // Image.asset(
-                            //   'asset/ai_play.gif',
-                            //   height: 35,
-                            //   fit: BoxFit.contain,
-                            // )
-                            else if (recording == 0)
-                              Center(
-                                child: Row(
-                                  crossAxisAlignment: CrossAxisAlignment.center,
-                                  mainAxisAlignment: MainAxisAlignment.center,
-                                  mainAxisSize: MainAxisSize.min,
-                                  children: const [
-                                    CupertinoActivityIndicator(
-                                      color: Colors.white,
+                                const SizedBox(
+                                  height: 20,
+                                ),
+                                // 一般播放和录音没啥关系
+                                const Text(
+                                  '“我想要活酵母”',
+                                  style: TextStyle(
+                                    color: Colors.white,
+                                    fontSize: 22,
+                                    fontWeight: FontWeight.bold,
+                                  ),
+                                ),
+                                const SizedBox(
+                                  height: 10,
+                                ),
+                                if (recording == 1)
+                                  Image.asset(
+                                    'assets/images/ai_play.gif',
+                                    package: 'ptt_ai_package',
+                                    height: 35,
+                                    fit: BoxFit.contain,
+                                  )
+                                else if (recording == 0)
+                                  Center(
+                                    child: Row(
+                                      crossAxisAlignment:
+                                      CrossAxisAlignment.center,
+                                      mainAxisAlignment:
+                                      MainAxisAlignment.center,
+                                      mainAxisSize: MainAxisSize.max,
+                                      children: const [
+                                        CupertinoActivityIndicator(
+                                          color: Colors.white,
+                                        ),
+                                        SizedBox(
+                                          width: 5,
+                                        ),
+                                        Text(
+                                          '处理中...',
+                                          style: TextStyle(
+                                            color: Colors.white,
+                                            fontSize: 16,
+                                            fontWeight: FontWeight.normal,
+                                          ),
+                                        ),
+                                      ],
                                     ),
-                                    SizedBox(
-                                      width: 5,
-                                    ),
-                                    Text(
-                                      '处理中...',
+                                  )
+                                else
+                                  const Center(
+                                    child: Text(
+                                      '没找到您想要的结果',
                                       style: TextStyle(
                                         color: Colors.white,
                                         fontSize: 16,
                                         fontWeight: FontWeight.normal,
                                       ),
                                     ),
-                                  ],
-                                ),
-                              )
-                            else
-                              const Center(
-                                child: Text(
-                                  '没找到您想要的结果',
-                                  style: TextStyle(
-                                    color: Colors.white,
-                                    fontSize: 16,
-                                    fontWeight: FontWeight.normal,
                                   ),
-                                ),
-                              ),
-                            // const SizedBox(
-                            //   height: 10,
-                            // ),
-                          ],
-                        )
-                      ],
-                    )),
-              ],
+                              ],
+                            ),
+                          )
+                        ],
+                      )),
+                ],
+              ),
             ),
-          )),
+          ),
+        ),
+      ),
     );
   }
 
@@ -292,20 +307,20 @@ class _HomeViewState extends State<HomeView> with WidgetsBindingObserver {
     switch (state) {
       case AppLifecycleState.resumed:
         record();
-        print('------>>>>>>>>resumed进入前台');
+        // print('------>>>>>>>>resumed进入前台');
         break;
       case AppLifecycleState.inactive:
-        print('------>>>>>>>>inactive进入后台');
+      // print('------>>>>>>>>inactive进入后台');
         final isRecording = await _audioRecorder.isRecording();
         if (isRecording) {
           stopRecorder();
         }
         break;
       case AppLifecycleState.paused:
-        print('------>>>>>>>>paused应用暂停');
+      // print('------>>>>>>>>paused应用暂停');
         break;
       case AppLifecycleState.detached:
-        print('------>>>>>>>>detached');
+      // print('------>>>>>>>>detached');
         break;
     }
   }
