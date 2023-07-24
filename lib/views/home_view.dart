@@ -3,6 +3,7 @@ import 'dart:async';
 import 'package:dio/dio.dart' as dio;
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:flutter_sound_record/flutter_sound_record.dart';
 import 'package:fluttertoast/fluttertoast.dart';
 import 'package:just_audio/just_audio.dart';
@@ -13,10 +14,11 @@ import '../utils/file_util.dart';
 
 class HomeView extends StatefulWidget {
   final int? time;
-  const HomeView({Key? key,this.time}) : super(key: key);
+
+  const HomeView({Key? key, this.time}) : super(key: key);
 
   @override
-   createState() => _HomeViewState();
+  createState() => _HomeViewState();
 }
 
 class _HomeViewState extends State<HomeView> with WidgetsBindingObserver {
@@ -25,6 +27,7 @@ class _HomeViewState extends State<HomeView> with WidgetsBindingObserver {
   Amplitude? _amplitude;
   int stopCount = 0;
   int talkTime = 0;
+  bool startSuccess = false;
   final _player = AudioPlayer();
 
   // final audioStart =
@@ -67,6 +70,7 @@ class _HomeViewState extends State<HomeView> with WidgetsBindingObserver {
         await _audioRecorder.start(
           path: filePath,
         );
+        startSuccess = true;
         _ampTimer =
             Timer.periodic(const Duration(milliseconds: 200), (Timer t) async {
           talkTime++;
@@ -88,16 +92,24 @@ class _HomeViewState extends State<HomeView> with WidgetsBindingObserver {
               stopCount = 0;
             }
           }
-
         });
       } else {
         Fluttertoast.showToast(msg: '请开启麦克风权限', gravity: ToastGravity.CENTER)
-        .then((value) {
+            .then((value) {
           var nav = Navigator.of(context);
-          nav.pop({'errorMsg': '麦克风权限未打开','errorType':'1'});
+          nav.pop({'errorMsg': '麦克风权限未打开', 'errorType': '1'});
         });
       }
-    } catch (_) {}
+    } catch (e) {
+      // print('------>>>>>>>>e$e');
+      if (e.runtimeType == PlatformException) {
+        Fluttertoast.showToast(msg: '请开启麦克风权限', gravity: ToastGravity.CENTER)
+            .then((value) {
+          var nav = Navigator.of(context);
+          nav.pop({'errorMsg': '麦克风权限未打开', 'errorType': '1'});
+        });
+      }
+    }
   }
 
   void stopRecorder() async {
@@ -149,7 +161,7 @@ class _HomeViewState extends State<HomeView> with WidgetsBindingObserver {
         });
       }
     } else {
-      nav.pop({'errorMsg': '录音出错','errorType':'0'});
+      nav.pop({'errorMsg': '录音出错', 'errorType': '0'});
     }
   }
 
@@ -308,14 +320,20 @@ class _HomeViewState extends State<HomeView> with WidgetsBindingObserver {
     super.didChangeAppLifecycleState(state);
     switch (state) {
       case AppLifecycleState.resumed:
-        record();
+        if (startSuccess) {
+          record();
+        }
         // print('------>>>>>>>>resumed进入前台');
         break;
       case AppLifecycleState.inactive:
         // print('------>>>>>>>>inactive进入后台');
-        final isRecording = await _audioRecorder.isRecording();
-        if (isRecording) {
-          stopRecorder();
+        if (startSuccess) {
+          try {
+            final isRecording = await _audioRecorder.isRecording();
+            if (isRecording) {
+              stopRecorder();
+            }
+          } catch (_) {}
         }
         break;
       case AppLifecycleState.paused:
