@@ -124,19 +124,18 @@ class _HomeViewState extends State<HomeView> with WidgetsBindingObserver {
 
         print(data);
       } else {
-        recording = 2;
-        setState(() {});
-        if (recording == 2) {
-          Future.delayed(const Duration(seconds: 2)).then((value) {
-            setState(() {
-              recording = 1;
-            });
-            record();
-          });
-        }
+
+        setState(() {
+          recording = 2;
+        });
         Fluttertoast.showToast(
             msg: res['msg'] ?? '服务出了点问题...', gravity: ToastGravity.CENTER);
-        record();
+        Future.delayed(const Duration(seconds: 2)).then((value) {
+          setState(() {
+            recording = 1;
+          });
+          record();
+        });
       }
     } else {
       nav.pop({'errorMsg': '录音出错'});
