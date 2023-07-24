@@ -1,8 +1,7 @@
 import 'package:dio/dio.dart';
-import '../utils/userUtil.dart';
+import '../utils/user_util.dart';
 import '../common/constant.dart';
 import 'dart:convert';
-// import 'package:convert/convert.dart';
 import 'package:crypto/crypto.dart';
 
 class RequestService{
@@ -27,7 +26,7 @@ class RequestService{
         InterceptorsWrapper(
           onRequest: (options,handler){
             var token = UserUtil.getToken();
-            var time = new DateTime.now().millisecondsSinceEpoch.toString();
+            var time =  DateTime.now().millisecondsSinceEpoch.toString();
             var appkey = Constant.appkey;
             var appsecret = Constant.appsecret;
             var sign = toMd5(appkey+appsecret+time).toUpperCase();

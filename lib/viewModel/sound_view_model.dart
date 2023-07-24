@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import '../model/soundModel.dart';
+import '../model/sound_model.dart';
 
 class SoundViewModel with ChangeNotifier{
 

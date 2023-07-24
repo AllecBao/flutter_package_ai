@@ -1,5 +1,5 @@
 import 'package:json_annotation/json_annotation.dart';
-part 'soundModel.g.dart';
+part 'sound_model.g.dart';
 
 @JsonSerializable()
 class SoundModel{

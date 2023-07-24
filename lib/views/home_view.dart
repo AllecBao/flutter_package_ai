@@ -8,14 +8,14 @@ import 'package:fluttertoast/fluttertoast.dart';
 import 'package:just_audio/just_audio.dart';
 
 import '../http/api.dart';
-import '../model/soundModel.dart';
+import '../model/sound_model.dart';
 import '../utils/file_util.dart';
 
 class HomeView extends StatefulWidget {
   const HomeView({Key? key}) : super(key: key);
 
   @override
-  _HomeViewState createState() => _HomeViewState();
+   createState() => _HomeViewState();
 }
 
 class _HomeViewState extends State<HomeView> with WidgetsBindingObserver {
@@ -91,10 +91,10 @@ class _HomeViewState extends State<HomeView> with WidgetsBindingObserver {
         Fluttertoast.showToast(msg: '请开启麦克风权限', gravity: ToastGravity.CENTER)
         .then((value) {
           var nav = Navigator.of(context);
-          nav.pop(false);
+          nav.pop({'errorMsg': '麦克风权限未打开','errorType':'1'});
         });
       }
-    } catch (e) {}
+    } catch (_) {}
   }
 
   void stopRecorder() async {
@@ -111,7 +111,7 @@ class _HomeViewState extends State<HomeView> with WidgetsBindingObserver {
       });
       var resp = await Api.voiceToTextToSkip(formData);
       var res = resp.data;
-      print(res);
+      // print(res);
       if (res["code"] == '10000') {
         SoundModel soundRes = SoundModel.fromJson(res["res"]);
         var data = {"isNativePage": soundRes.nativePage, "url": soundRes.url};
@@ -131,7 +131,7 @@ class _HomeViewState extends State<HomeView> with WidgetsBindingObserver {
           });
         }
 
-        print(data);
+        // print(data);
       } else {
         setState(() {
           recording = 2;
@@ -146,7 +146,7 @@ class _HomeViewState extends State<HomeView> with WidgetsBindingObserver {
         });
       }
     } else {
-      nav.pop({'errorMsg': '录音出错'});
+      nav.pop({'errorMsg': '录音出错','errorType':'0'});
     }
   }
 

@@ -21,7 +21,7 @@ Future<String?> createFileGetPath({
     }
     filePath = context.join(filePath, fileName);
     return filePath;
-  } catch (e) {
+  } catch (_) {
     
   }
   return null;
