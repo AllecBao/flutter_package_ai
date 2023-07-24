@@ -163,17 +163,17 @@ class _HomeViewState extends State<HomeView> with WidgetsBindingObserver {
       backgroundColor: Colors.transparent,
       body: Center(
         child: Container(
-            decoration: const BoxDecoration(
-              borderRadius: BorderRadius.all(
+            decoration:  BoxDecoration(
+              borderRadius: const BorderRadius.all(
                 Radius.circular(10),
               ),
               image: DecorationImage(
-                image: AssetImage(
-                  'assets/images/img_aidialog_bg.png',
-                  package: 'ptt_ai_package',
-                ),
-                // image: NetworkImage(
-                //     'https://ptt-resource.oss-cn-hangzhou.aliyuncs.com/ptt/images/img_aidialog_bg.png'),
+                // image: AssetImage(
+                //   'assets/images/img_aidialog_bg.png',
+                //   package: 'ptt_ai_package',
+                // ),
+                image: NetworkImage(
+                    'https://ptt-resource.oss-cn-hangzhou.aliyuncs.com/ptt/images/img_aidialog_bg.png?time=${DateTime.now().millisecondsSinceEpoch}',),
               ),
             ),
             child: AspectRatio(
