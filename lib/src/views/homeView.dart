@@ -7,9 +7,10 @@ import 'package:flutter_sound_record/flutter_sound_record.dart';
 import 'package:fluttertoast/fluttertoast.dart';
 import 'package:just_audio/just_audio.dart';
 
-import '../http/api.dart';
-import '../model/soundModel.dart';
-import '../utils/file_util.dart';
+import '../../http/api.dart';
+import '../../model/soundModel.dart';
+import '../../utils/file_util.dart';
+
 
 class HomeView extends StatefulWidget {
   const HomeView({Key? key}) : super(key: key);
