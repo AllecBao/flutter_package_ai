@@ -1,4 +1,10 @@
-library ptt_ai_package;
 
+import 'package:flutter/widgets.dart';
 
-export 'src/common.dart';
+import 'ptt_ai_package_platform_interface.dart';
+export 'common.dart';
+class PttAiPackage {
+  Future<String?> getPlatformVersion() {
+    return PttAiPackagePlatform.instance.getPlatformVersion();
+  }
+}
