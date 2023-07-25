@@ -80,7 +80,7 @@ class _HomeViewState extends State<HomeView> with WidgetsBindingObserver {
         _ampTimer =
             Timer.periodic(const Duration(milliseconds: 200), (Timer t) async {
           talkTime++;
-          if (talkTime > 15 * 5) {
+          if (talkTime > 11 * 5) {
             talkTime = 0;
             stopRecorder();
             return;
@@ -132,7 +132,7 @@ class _HomeViewState extends State<HomeView> with WidgetsBindingObserver {
       });
       var resp = await Api.voiceToTextToSkip(formData);
       var res = resp.data;
-      // print(res);
+      print(res);
       if (res["code"] == '10000') {
         SoundModel soundRes = SoundModel.fromJson(res["res"]);
         var data = {"isNativePage": soundRes.nativePage, "url": soundRes.url};
@@ -242,16 +242,16 @@ class _HomeViewState extends State<HomeView> with WidgetsBindingObserver {
                                 const SizedBox(
                                   height: 20,
                                 ),
-                                FittedBox(
-                                  child: const Text(
-                                    '“庭妹妹,我想要活酵母”',
-                                    style: TextStyle(
-                                      color: Colors.white,
-                                      fontSize: 22,
-                                      fontWeight: FontWeight.bold,
-                                    ),
-                                  ),
-                                ),
+                                 const FittedBox(
+                                   child:  Text(
+                                     '“庭妹妹,我想要活酵母”',
+                                     style: TextStyle(
+                                       color: Colors.white,
+                                       fontSize: 18,
+                                       fontWeight: FontWeight.bold,
+                                     ),
+                                   ),
+                                 ),
                                 const SizedBox(
                                   height: 10,
                                 ),
@@ -301,9 +301,11 @@ class _HomeViewState extends State<HomeView> with WidgetsBindingObserver {
                                   ),
                               ],
                             ),
-                          )
+                          ),
+
                         ],
                       )),
+                  const SizedBox(width: 5,),
                 ],
               ),
             ),
