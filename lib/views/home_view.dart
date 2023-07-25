@@ -1,5 +1,6 @@
 import 'dart:async';
 
+import 'package:cached_network_image/cached_network_image.dart';
 import 'package:dio/dio.dart' as dio;
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
@@ -178,129 +179,130 @@ class _HomeViewState extends State<HomeView> with WidgetsBindingObserver {
       backgroundColor: Colors.transparent,
       body: Center(
         child: Container(
-            decoration:  BoxDecoration(
-              borderRadius: const BorderRadius.all(
-                Radius.circular(10),
-              ),
-              image: DecorationImage(
-                // image: AssetImage(
-                //   'assets/images/img_aidialog_bg.png',
-                //   package: 'ptt_ai_package',
-                // ),
-                image: NetworkImage(
-                    'https://ptt-resource.oss-cn-hangzhou.aliyuncs.com/ptt/images/img_aidialog_bg.png?time=${widget.time ??  DateTime.now().millisecondsSinceEpoch}',),
-              ),
+          decoration: BoxDecoration(
+            borderRadius: const BorderRadius.all(
+              Radius.circular(10),
             ),
-            child: AspectRatio(
-              aspectRatio: 3 / 2,
-              child: Container(
-                margin: const EdgeInsets.symmetric(horizontal: 18,vertical: 33),
-                child: Row(
-                  children: [
-                    Expanded(
-                      flex: 4,
-                      child: Container(
-                      ),
-                    ),
-                    Expanded(
-                        flex: 5,
-                        child: Stack(
-                          children: [
-                            Positioned(
-                              top: 20,
-                              right: 20,
-                              child: GestureDetector(
-                                onTap: () {
-                                  // stopRecorder();
-                                  navPopUp();
-                                },
-                                child: Container(
-                                  width: 60,
-                                  height: 60,
-                                  color: const Color(0x00000001),
-                                ),
+            image: DecorationImage(
+              // image: AssetImage(
+              //   'assets/images/img_aidialog_bg.png',
+              //   package: 'ptt_ai_package',
+              // ),
+              // image: NetworkImage(
+              //     'https://ptt-resource.oss-cn-hangzhou.aliyuncs.com/ptt/images/img_aidialog_bg.png?time=${widget.time ??  DateTime.now().millisecondsSinceEpoch}',),
+              image: CachedNetworkImageProvider(
+                  'https://ptt-resource.oss-cn-hangzhou.aliyuncs.com/ptt/images/img_aidialog_bg.png?time=${widget.time ?? DateTime.now().millisecondsSinceEpoch}'),
+            ),
+          ),
+          child: AspectRatio(
+            aspectRatio: 3 / 2,
+            child: Container(
+              margin: const EdgeInsets.symmetric(horizontal: 18, vertical: 33),
+              child: Row(
+                children: [
+                  Expanded(
+                    flex: 4,
+                    child: Container(),
+                  ),
+                  Expanded(
+                      flex: 5,
+                      child: Stack(
+                        children: [
+                          Positioned(
+                            top: 20,
+                            right: 20,
+                            child: GestureDetector(
+                              onTap: () {
+                                // stopRecorder();
+                                navPopUp();
+                              },
+                              child: Container(
+                                width: 60,
+                                height: 60,
+                                color: const Color(0x00000001),
                               ),
                             ),
-                            SizedBox(
-                              width: double.infinity,
-                              child: Column(
-                                mainAxisAlignment: MainAxisAlignment.center,
-                                children: [
-                                  const Text(
-                                    '你可以这样说',
-                                    style: TextStyle(
-                                      color: Colors.white,
-                                      fontSize: 16,
-                                    ),
+                          ),
+                          SizedBox(
+                            width: double.infinity,
+                            child: Column(
+                              mainAxisAlignment: MainAxisAlignment.center,
+                              children: [
+                                const Text(
+                                  '你可以这样说',
+                                  style: TextStyle(
+                                    color: Colors.white,
+                                    fontSize: 16,
                                   ),
-                                  const SizedBox(
-                                    height: 20,
+                                ),
+                                const SizedBox(
+                                  height: 20,
+                                ),
+                                // 一般播放和录音没啥关系
+                                const Text(
+                                  '“我想要活酵母”',
+                                  style: TextStyle(
+                                    color: Colors.white,
+                                    fontSize: 22,
+                                    fontWeight: FontWeight.bold,
                                   ),
-                                  // 一般播放和录音没啥关系
-                                  const Text(
-                                    '“我想要活酵母”',
-                                    style: TextStyle(
-                                      color: Colors.white,
-                                      fontSize: 22,
-                                      fontWeight: FontWeight.bold,
-                                    ),
-                                  ),
-                                  const SizedBox(
-                                    height: 10,
-                                  ),
-                                  if (recording == 1)
-                                    Image.asset(
-                                      'assets/images/ai_play.gif',
-                                      package: 'ptt_ai_package',
-                                      height: 35,
-                                      fit: BoxFit.contain,
-                                    )
-                                  else if (recording == 0)
-                                    Center(
-                                      child: Row(
-                                        crossAxisAlignment:
-                                            CrossAxisAlignment.center,
-                                        mainAxisAlignment:
-                                            MainAxisAlignment.center,
-                                        mainAxisSize: MainAxisSize.max,
-                                        children: const [
-                                          CupertinoActivityIndicator(
-                                            color: Colors.white,
-                                          ),
-                                          SizedBox(
-                                            width: 5,
-                                          ),
-                                          Text(
-                                            '处理中...',
-                                            style: TextStyle(
-                                              color: Colors.white,
-                                              fontSize: 16,
-                                              fontWeight: FontWeight.normal,
-                                            ),
-                                          ),
-                                        ],
-                                      ),
-                                    )
-                                  else
-                                    const Center(
-                                      child: Text(
-                                        '没找到您想要的结果',
-                                        style: TextStyle(
+                                ),
+                                const SizedBox(
+                                  height: 10,
+                                ),
+                                if (recording == 1)
+                                  Image.asset(
+                                    'assets/images/ai_play.gif',
+                                    package: 'ptt_ai_package',
+                                    height: 35,
+                                    fit: BoxFit.contain,
+                                  )
+                                else if (recording == 0)
+                                  Center(
+                                    child: Row(
+                                      crossAxisAlignment:
+                                          CrossAxisAlignment.center,
+                                      mainAxisAlignment:
+                                          MainAxisAlignment.center,
+                                      mainAxisSize: MainAxisSize.max,
+                                      children: const [
+                                        CupertinoActivityIndicator(
                                           color: Colors.white,
-                                          fontSize: 16,
-                                          fontWeight: FontWeight.normal,
                                         ),
+                                        SizedBox(
+                                          width: 5,
+                                        ),
+                                        Text(
+                                          '处理中...',
+                                          style: TextStyle(
+                                            color: Colors.white,
+                                            fontSize: 16,
+                                            fontWeight: FontWeight.normal,
+                                          ),
+                                        ),
+                                      ],
+                                    ),
+                                  )
+                                else
+                                  const Center(
+                                    child: Text(
+                                      '没找到您想要的结果',
+                                      style: TextStyle(
+                                        color: Colors.white,
+                                        fontSize: 16,
+                                        fontWeight: FontWeight.normal,
                                       ),
                                     ),
-                                ],
-                              ),
-                            )
-                          ],
-                        )),
-                  ],
-                ),
+                                  ),
+                              ],
+                            ),
+                          )
+                        ],
+                      )),
+                ],
               ),
             ),
+          ),
         ),
       ),
     );
