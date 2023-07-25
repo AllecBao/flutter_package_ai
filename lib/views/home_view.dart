@@ -39,9 +39,14 @@ class _HomeViewState extends State<HomeView> with WidgetsBindingObserver {
   //     'https://ptt-resource.oss-cn-hangzhou.aliyuncs.com/ai/audios/sound_end.mp3';
   int recording = 1; // 0:录音处理中 1:正在录音 2:录音失败
 
+  late String imageBg;
+
   @override
   void initState() {
     super.initState();
+    imageBg =
+        'https://ptt-resource.oss-cn-hangzhou.aliyuncs.com/ptt/images/img_aidialog_bg.png?time=${widget.time ?? DateTime.now().millisecondsSinceEpoch}';
+    // print('------>>>>>>>>$imageBg');
     WidgetsBinding.instance.addObserver(this);
     WidgetsBinding.instance.addPostFrameCallback((timeStamp) {
       record();
@@ -190,8 +195,7 @@ class _HomeViewState extends State<HomeView> with WidgetsBindingObserver {
               // ),
               // image: NetworkImage(
               //     'https://ptt-resource.oss-cn-hangzhou.aliyuncs.com/ptt/images/img_aidialog_bg.png?time=${widget.time ??  DateTime.now().millisecondsSinceEpoch}',),
-              image: CachedNetworkImageProvider(
-                  'https://ptt-resource.oss-cn-hangzhou.aliyuncs.com/ptt/images/img_aidialog_bg.png?time=${widget.time ?? DateTime.now().millisecondsSinceEpoch}'),
+              image: CachedNetworkImageProvider(imageBg),
             ),
           ),
           child: AspectRatio(
