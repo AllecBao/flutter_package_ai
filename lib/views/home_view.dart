@@ -242,13 +242,14 @@ class _HomeViewState extends State<HomeView> with WidgetsBindingObserver {
                                 const SizedBox(
                                   height: 20,
                                 ),
-                                // 一般播放和录音没啥关系
-                                const Text(
-                                  '“我想要活酵母”',
-                                  style: TextStyle(
-                                    color: Colors.white,
-                                    fontSize: 22,
-                                    fontWeight: FontWeight.bold,
+                                FittedBox(
+                                  child: const Text(
+                                    '“庭妹妹,我想要活酵母”',
+                                    style: TextStyle(
+                                      color: Colors.white,
+                                      fontSize: 22,
+                                      fontWeight: FontWeight.bold,
+                                    ),
                                   ),
                                 ),
                                 const SizedBox(
