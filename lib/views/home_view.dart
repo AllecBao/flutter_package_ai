@@ -97,12 +97,12 @@ class _HomeViewState extends State<HomeView> with WidgetsBindingObserver {
           final amplitudeCurrent = _amplitude?.current;
           // print('*********value:$amplitudeCurrent');
           if (amplitudeCurrent != null) {
-            if (amplitudeCurrent < -26) {
+            if (amplitudeCurrent < -24) {
               if(validCount<5){
                 validCount = 0;
               }
-              stopCount++;
               if(validCount>5){
+                stopCount++;
                 if (stopCount >= 7) {
                   stopCount = 0;
                   stopRecorder();
@@ -330,8 +330,10 @@ class _HomeViewState extends State<HomeView> with WidgetsBindingObserver {
                                  Center(
                                     child: GestureDetector(
                                       onTap: (){
+                                        if(recording == 1){
                                           validCount=5;
                                           stopRecorder();
+                                        }
                                       },
                                       child: Container(
                                           margin: EdgeInsets.only(top: 10),
@@ -343,11 +345,11 @@ class _HomeViewState extends State<HomeView> with WidgetsBindingObserver {
                                                   begin: Alignment.centerLeft,
                                                   end: Alignment.centerRight,
                                                   colors: recording==1 ? [
-                                                    Color(0x9912336a),
-                                                    Color(0x9906ced9),
+                                                    Color(0x8812336a),
+                                                    Color(0x8806ced9),
                                                     ] : [
-                                                    Color(0x7712336a),
-                                                    Color(0x7706ced9),
+                                                    Color(0x4412336a),
+                                                    Color(0x4406ced9),
                                                   ]
                                               )
                                           ),
