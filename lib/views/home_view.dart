@@ -27,6 +27,7 @@ class _HomeViewState extends State<HomeView> with WidgetsBindingObserver {
   Timer? _ampTimer;
   Amplitude? _amplitude;
   int stopCount = 0;
+  int validCount = 0;//有效语音时长
   int talkTime = 0;
   bool startSuccess = false;
   final _player = AudioPlayer();
@@ -48,10 +49,13 @@ class _HomeViewState extends State<HomeView> with WidgetsBindingObserver {
         'https://ptt-resource.oss-cn-hangzhou.aliyuncs.com/ptt/images/img_aidialog_bg.png?time=${widget.time ?? DateTime.now().millisecondsSinceEpoch}';
     // print('------>>>>>>>>$imageBg');
     WidgetsBinding.instance.addObserver(this);
-    WidgetsBinding.instance.addPostFrameCallback((timeStamp) {
+    WidgetsBinding.instance.addPostFrameCallback( (timeStamp) async {
+      await audioPlay(audioStart);
       record();
     });
   }
+
+
 
   Future<void> audioPlay(String url) async {
     _player.stop();
@@ -72,29 +76,40 @@ class _HomeViewState extends State<HomeView> with WidgetsBindingObserver {
           dirName: 'audio',
           tempFile: true,
         );
-        await audioPlay(audioStart);
         await _audioRecorder.start(
           path: filePath,
         );
         startSuccess = true;
+        stopCount = 0;
+        validCount = 0;
+        talkTime = 0;
         _ampTimer =
             Timer.periodic(const Duration(milliseconds: 200), (Timer t) async {
-          talkTime++;
-          if (talkTime > 11 * 5) {
-            talkTime = 0;
-            stopRecorder();
-            return;
-          }
+
+            talkTime++;
+            if (talkTime > 11 * 5) {
+              talkTime = 0;
+              stopRecorder();
+              return;
+            }
           _amplitude = await _audioRecorder.getAmplitude();
+
           final amplitudeCurrent = _amplitude?.current;
+          // print('*********value:$amplitudeCurrent');
           if (amplitudeCurrent != null) {
-            if (amplitudeCurrent < -30) {
+            if (amplitudeCurrent < -26) {
+              if(validCount<5){
+                validCount = 0;
+              }
               stopCount++;
-              if (stopCount >= 8) {
-                stopCount = 0;
-                stopRecorder();
+              if(validCount>5){
+                if (stopCount >= 7) {
+                  stopCount = 0;
+                  stopRecorder();
+                }
               }
             } else {
+              validCount++;
               stopCount = 0;
             }
           }
@@ -122,6 +137,19 @@ class _HomeViewState extends State<HomeView> with WidgetsBindingObserver {
     var nav = Navigator.of(context);
     _ampTimer?.cancel();
     final String? path = await _audioRecorder.stop();
+
+    if(validCount<5){
+      setState(() {
+        recording = 2;
+      });
+      Future.delayed(const Duration(seconds: 1)).then((value) {
+        setState(() {
+          recording = 1;
+        });
+        record();
+      });
+      return;
+    }
     // audioPlay(audioEnd);
     if (path != null && path.isNotEmpty) {
       var file = await dio.MultipartFile.fromFile(path);
@@ -132,7 +160,7 @@ class _HomeViewState extends State<HomeView> with WidgetsBindingObserver {
       });
       var resp = await Api.voiceToTextToSkip(formData);
       var res = resp.data;
-      print(res);
+      // print(res);
       if (res["code"] == '10000') {
         SoundModel soundRes = SoundModel.fromJson(res["res"]);
         var data = {"isNativePage": soundRes.nativePage, "url": soundRes.url};
@@ -157,8 +185,8 @@ class _HomeViewState extends State<HomeView> with WidgetsBindingObserver {
         setState(() {
           recording = 2;
         });
-        Fluttertoast.showToast(
-            msg: res['msg'] ?? '服务出了点问题...', gravity: ToastGravity.CENTER);
+        // Fluttertoast.showToast(
+        //     msg: res['msg'] ?? '服务出了点问题...', gravity: ToastGravity.CENTER);
         Future.delayed(const Duration(seconds: 2)).then((value) {
           setState(() {
             recording = 1;
@@ -299,6 +327,41 @@ class _HomeViewState extends State<HomeView> with WidgetsBindingObserver {
                                       ),
                                     ),
                                   ),
+                                 Center(
+                                    child: GestureDetector(
+                                      onTap: (){
+                                          validCount=5;
+                                          stopRecorder();
+                                      },
+                                      child: Container(
+                                          margin: EdgeInsets.only(top: 10),
+                                          height: 38,
+                                          width: 80,
+                                          decoration: BoxDecoration(
+                                              borderRadius: BorderRadius.circular(19),
+                                              gradient: LinearGradient(
+                                                  begin: Alignment.centerLeft,
+                                                  end: Alignment.centerRight,
+                                                  colors: recording==1 ? [
+                                                    Color(0x9912336a),
+                                                    Color(0x9906ced9),
+                                                    ] : [
+                                                    Color(0x7712336a),
+                                                    Color(0x7706ced9),
+                                                  ]
+                                              )
+                                          ),
+                                          child: Center(
+                                            child: Text('完成',
+                                              style: TextStyle(
+                                                color: recording==1 ? Colors.white:Colors.grey,
+                                                fontWeight: FontWeight.bold,
+                                              ),
+                                            ),
+                                          )
+                                      ),
+                                    ),
+                                )
                               ],
                             ),
                           ),
@@ -317,6 +380,7 @@ class _HomeViewState extends State<HomeView> with WidgetsBindingObserver {
 
   @override
   void dispose() {
+    print('******dispose');
     _audioRecorder.dispose();
     _ampTimer?.cancel();
     _player.dispose();
