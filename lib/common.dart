@@ -6,6 +6,8 @@ import 'views/home_view.dart';
 /// 返回数据格式：{'errorMsg': '麦克风权限未打开','errorType':'1'}
 /// errorType：0接口错误信息，1授权错误
 /// {"isNativePage": 是否是web地址, "url": 路由地址}
+/// isDebug：
+/// scaleWidth: 实际尺寸与UI设计的比例
 Future<dynamic> showMainView(
   context, {
   int? time,
@@ -27,6 +29,7 @@ Future<dynamic> showMainView(
         return HomeView(
           time: time,
           isDebug: isDebug,
+          scaleWidth: scaleWidth,
         );
       });
 }
