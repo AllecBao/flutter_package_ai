@@ -56,7 +56,7 @@ class _HomeViewState extends State<HomeView> with WidgetsBindingObserver {
     scaleWidth = widget.scaleWidth;
     imageBg =
         'https://ptt-resource.oss-cn-hangzhou.aliyuncs.com/ptt/images/img_aidialog_bg.png?time=${widget.time ?? DateTime.now().millisecondsSinceEpoch}';
-    // print('------>>>>>>>>$imageBg');
+    log(imageBg);
     WidgetsBinding.instance.addObserver(this);
     WidgetsBinding.instance.addPostFrameCallback((timeStamp) async {
       await audioPlay(audioStart);
@@ -101,7 +101,7 @@ class _HomeViewState extends State<HomeView> with WidgetsBindingObserver {
           _amplitude = await _audioRecorder.getAmplitude();
 
           final amplitudeCurrent = _amplitude?.current;
-          // print('*********value:$amplitudeCurrent');
+          // log('*********value:$amplitudeCurrent');
           if (amplitudeCurrent != null) {
             if (amplitudeCurrent < -24) {
               if (validCount < 5) {
@@ -128,9 +128,7 @@ class _HomeViewState extends State<HomeView> with WidgetsBindingObserver {
         });
       }
     } catch (e) {
-      if (widget.isDebug) {
-        print('------>>>>>>>>e$e');
-      }
+      log('$e');
       if (e.runtimeType == PlatformException) {
         Fluttertoast.showToast(msg: '请开启麦克风权限', gravity: ToastGravity.CENTER)
             .then((value) {
@@ -168,9 +166,7 @@ class _HomeViewState extends State<HomeView> with WidgetsBindingObserver {
       });
       var resp = await Api.voiceToTextToSkip(formData);
       var res = resp.data;
-      if (widget.isDebug) {
-        print(res);
-      }
+      log(res);
       if (res["code"] == '10000') {
         SoundModel soundRes = SoundModel.fromJson(res["res"]);
         var data = {"isNativePage": soundRes.nativePage, "url": soundRes.url};
@@ -190,7 +186,7 @@ class _HomeViewState extends State<HomeView> with WidgetsBindingObserver {
           });
         }
 
-        // print(data);
+        // log(data);
       } else {
         setState(() {
           recording = 2;
@@ -225,6 +221,8 @@ class _HomeViewState extends State<HomeView> with WidgetsBindingObserver {
           alignment: AlignmentDirectional.center,
           children: [
             InkWell(
+              highlightColor: Colors.transparent,
+              splashColor: Colors.transparent,
               onTap: () {
                 Navigator.pop(context);
               },
@@ -249,9 +247,11 @@ class _HomeViewState extends State<HomeView> with WidgetsBindingObserver {
               aspectRatio: 3 / 2,
               child: InkWell(
                 onTap: () {},
+                highlightColor: Colors.transparent,
+                splashColor: Colors.transparent,
                 child: Container(
                   margin: EdgeInsets.symmetric(
-                      horizontal: 18 * scaleWidth, vertical: 29 * scaleWidth),
+                      horizontal: 18 * scaleWidth, vertical: 33 * scaleWidth),
                   child: Row(
                     children: [
                       const Expanded(
@@ -270,6 +270,8 @@ class _HomeViewState extends State<HomeView> with WidgetsBindingObserver {
                                   onTap: () {
                                     Navigator.pop(context);
                                   },
+                                  highlightColor: Colors.transparent,
+                                  splashColor: Colors.transparent,
                                   child: SizedBox(
                                     width: 46 * scaleWidth,
                                     height: 26 * scaleWidth,
@@ -320,9 +322,15 @@ class _HomeViewState extends State<HomeView> with WidgetsBindingObserver {
     if (recording == 1) {
       return _recordingWidget();
     } else if (recording == 0) {
-      return _recordHandleWidget();
+      return Padding(
+        padding: EdgeInsets.only(bottom: 18 * scaleWidth),
+        child: _recordHandleWidget(),
+      );
     } else {
-      return _recordFailWidget();
+      return Padding(
+        padding: EdgeInsets.only(bottom: 18 * scaleWidth),
+        child: _recordFailWidget(),
+      );
     }
   }
 
@@ -344,6 +352,8 @@ class _HomeViewState extends State<HomeView> with WidgetsBindingObserver {
                 stopRecorder();
               }
             },
+            highlightColor: Colors.transparent,
+            splashColor: Colors.transparent,
             child: Container(
                 margin: const EdgeInsets.only(top: 2),
                 height: 38 * scaleWidth,
@@ -416,6 +426,12 @@ class _HomeViewState extends State<HomeView> with WidgetsBindingObserver {
     );
   }
 
+  void log(dynamic log) {
+    if (widget.isDebug) {
+      print('PTT_AI>>>>>>>>>>$log');
+    }
+  }
+
   @override
   void dispose() {
     _audioRecorder.dispose();
@@ -433,10 +449,10 @@ class _HomeViewState extends State<HomeView> with WidgetsBindingObserver {
         if (startSuccess) {
           record();
         }
-        // print('------>>>>>>>>resumed进入前台');
+        // log('进入前台');
         break;
       case AppLifecycleState.inactive:
-        // print('------>>>>>>>>inactive进入后台');
+        // log('进入后台');
         if (startSuccess) {
           try {
             final isRecording = await _audioRecorder.isRecording();
@@ -447,10 +463,10 @@ class _HomeViewState extends State<HomeView> with WidgetsBindingObserver {
         }
         break;
       case AppLifecycleState.paused:
-        // print('------>>>>>>>>paused应用暂停');
+        // log('应用暂停');
         break;
       case AppLifecycleState.detached:
-        // print('------>>>>>>>>detached');
+        // log('detached');
         break;
     }
   }
