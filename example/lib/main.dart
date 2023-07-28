@@ -21,20 +21,24 @@ class _MyAppState extends State<MyApp> {
         appBar: AppBar(
           title: const Text('Plugin example app'),
         ),
-        body: Builder(
-          builder: (context) {
-            return Center(
-              child: InkWell(
-                child: const Text('点击弹出ai'),
-                onTap: () async{
-                 showMainView(context,time: 12345678);
-                },
-              ),
-            );
-          }
-        ),
+        body: Builder(builder: (context) {
+          return Center(
+            child: InkWell(
+              child: Container(
+                  padding: const EdgeInsets.all(20),
+                  color: Colors.white,
+                  child: const Text('点击弹出ai')),
+              onTap: () async {
+                showMainView(
+                  context,
+                  time: 12345678,
+                  isDebug: true,
+                );
+              },
+            ),
+          );
+        }),
       ),
     );
   }
-
 }
