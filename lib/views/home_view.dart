@@ -160,7 +160,7 @@ class _HomeViewState extends State<HomeView> with WidgetsBindingObserver {
       });
       var resp = await Api.voiceToTextToSkip(formData);
       var res = resp.data;
-      // print(res);
+      print(res);
       if (res["code"] == '10000') {
         SoundModel soundRes = SoundModel.fromJson(res["res"]);
         var data = {"isNativePage": soundRes.nativePage, "url": soundRes.url};
@@ -336,7 +336,7 @@ class _HomeViewState extends State<HomeView> with WidgetsBindingObserver {
                                         }
                                       },
                                       child: Container(
-                                          margin: EdgeInsets.only(top: 10),
+                                          margin: const EdgeInsets.only(top: 10),
                                           height: 38,
                                           width: 80,
                                           decoration: BoxDecoration(
@@ -345,11 +345,11 @@ class _HomeViewState extends State<HomeView> with WidgetsBindingObserver {
                                                   begin: Alignment.centerLeft,
                                                   end: Alignment.centerRight,
                                                   colors: recording==1 ? [
-                                                    Color(0x8812336a),
-                                                    Color(0x8806ced9),
+                                                    const Color(0x8812336a),
+                                                    const Color(0x8806ced9),
                                                     ] : [
-                                                    Color(0x4412336a),
-                                                    Color(0x4406ced9),
+                                                    const Color(0x4412336a),
+                                                    const Color(0x4406ced9),
                                                   ]
                                               )
                                           ),
@@ -382,7 +382,7 @@ class _HomeViewState extends State<HomeView> with WidgetsBindingObserver {
 
   @override
   void dispose() {
-    print('******dispose');
+    // print('******dispose');
     _audioRecorder.dispose();
     _ampTimer?.cancel();
     _player.dispose();
