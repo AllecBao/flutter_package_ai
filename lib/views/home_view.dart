@@ -1,7 +1,9 @@
 import 'dart:async';
+import 'dart:math';
 
 import 'package:cached_network_image/cached_network_image.dart';
 import 'package:dio/dio.dart' as dio;
+import 'package:dio/dio.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
@@ -39,6 +41,7 @@ class _HomeViewState extends State<HomeView> with WidgetsBindingObserver {
   bool startSuccess = false;
   final _player = AudioPlayer();
   double scaleWidth = 1;
+  final CancelToken _cancelToken = CancelToken();
 
   // final audioStart =
   //     'https://ptt-resource.oss-cn-hangzhou.aliyuncs.com/ai/audios/sound_start.wav';
@@ -164,7 +167,11 @@ class _HomeViewState extends State<HomeView> with WidgetsBindingObserver {
       setState(() {
         recording = 0;
       });
-      var resp = await Api.voiceToTextToSkip(formData);
+      var resp = await Api.voiceToTextToSkip(formData,cancelToken: _cancelToken);
+      if(resp == null || resp.data==null){
+        log('resp:$resp---resp.data:${resp.data}');
+        return;
+      }
       var res = resp.data;
       log(res);
       if (res["code"] == '10000') {
@@ -437,6 +444,7 @@ class _HomeViewState extends State<HomeView> with WidgetsBindingObserver {
     _audioRecorder.dispose();
     _ampTimer?.cancel();
     _player.dispose();
+    _cancelToken.cancel();
     WidgetsBinding.instance.removeObserver(this);
     super.dispose();
   }
