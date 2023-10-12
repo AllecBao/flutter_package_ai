@@ -1,5 +1,4 @@
 import 'package:flutter/material.dart';
-
 import 'package:ptt_ai_package/common.dart';
 
 void main() {
@@ -23,18 +22,20 @@ class _MyAppState extends State<MyApp> {
         ),
         body: Builder(builder: (context) {
           return Center(
-            child: InkWell(
-              child: Container(
-                  padding: const EdgeInsets.all(20),
-                  color: Colors.white,
-                  child: const Text('点击弹出ai')),
-              onTap: () async {
-                showMainView(
-                  context,
-                  time: 12345678,
-                  isDebug: true,
-                );
-              },
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                ElevatedButton(
+                  onPressed: () {
+                    showMainView(
+                      context,
+                      time: 12345678,
+                      isDebug: true,
+                    );
+                  },
+                  child: const Text('点击弹出AI'),
+                ),
+              ],
             ),
           );
         }),

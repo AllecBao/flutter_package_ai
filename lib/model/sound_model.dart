@@ -1,7 +1,3 @@
-import 'package:json_annotation/json_annotation.dart';
-part 'sound_model.g.dart';
-
-@JsonSerializable()
 class SoundModel{
   SoundModel({
     this.text,
@@ -10,6 +6,7 @@ class SoundModel{
     this.nativePage,
     this.maybes,
     this.texts,
+    this.wavUrl,
   });
   String? text;
   String? type;
@@ -17,6 +14,21 @@ class SoundModel{
   String? nativePage;
   List<Map<String, dynamic>>? maybes;
   List<String?>? texts;
-  factory SoundModel.fromJson(Map<String, dynamic> json) => _$SoundModelFromJson(json);
-  Map<String,dynamic> toJson() => _$SoundModelToJson(this);
+  String? wavUrl;
+
+  factory SoundModel.fromJson(Map<String, dynamic> json) {
+    return SoundModel(
+      text: json["text"],
+      type: json["type"],
+      url: json["url"],
+      nativePage: json["nativePage"],
+      maybes: (json['maybes'] as List<dynamic>?)
+          ?.map((e) => e as Map<String, dynamic>)
+          .toList(),
+      texts:
+      (json['texts'] as List<dynamic>?)?.map((e) => e as String?).toList(),
+      wavUrl: json["wavUrl"],
+    );
+  }
+
 }

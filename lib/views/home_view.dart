@@ -66,13 +66,17 @@ class _HomeViewState extends State<HomeView> with WidgetsBindingObserver {
     });
   }
 
-  Future<void> audioPlay(String url) async {
+  Future<void> audioPlay(String url, {bool isNet = false}) async {
     _player.stop();
-    await _player.setAsset(
-      url,
-      package: 'ptt_ai_package',
-    );
-    // await _player.setUrl(url);
+    if (isNet) {
+      await _player.setUrl(url);
+    } else {
+      await _player.setAsset(
+        url,
+        package: 'ptt_ai_package',
+      );
+    }
+
     await _player.play();
   }
 
@@ -166,8 +170,9 @@ class _HomeViewState extends State<HomeView> with WidgetsBindingObserver {
       setState(() {
         recording = 0;
       });
-      var resp = await Api.voiceToTextToSkip(formData,cancelToken: _cancelToken);
-      if(resp == null || resp.data==null){
+      var resp =
+          await Api.voiceToTextToSkip(formData, cancelToken: _cancelToken);
+      if (resp == null || resp.data == null) {
         log('resp:$resp---resp.data:${resp.data}');
         return;
       }
@@ -176,6 +181,10 @@ class _HomeViewState extends State<HomeView> with WidgetsBindingObserver {
       if (res["code"] == '10000') {
         SoundModel soundRes = SoundModel.fromJson(res["res"]);
         var data = {"isNativePage": soundRes.nativePage, "url": soundRes.url};
+        if (soundRes.wavUrl != null && soundRes.wavUrl?.isNotEmpty == true) {
+          //如果需要播放语音，先播放语音
+          await audioPlay(soundRes.wavUrl!, isNet: true);
+        }
         if (soundRes.url != null && soundRes.url?.isNotEmpty == true) {
           recording = 0;
           nav.pop(data);
