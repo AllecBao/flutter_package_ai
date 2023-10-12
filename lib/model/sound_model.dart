@@ -10,6 +10,7 @@ class SoundModel{
     this.nativePage,
     this.maybes,
     this.texts,
+    this.wavUrl,
   });
   String? text;
   String? type;
@@ -17,6 +18,7 @@ class SoundModel{
   String? nativePage;
   List<Map<String, dynamic>>? maybes;
   List<String?>? texts;
+  String? wavUrl;
   factory SoundModel.fromJson(Map<String, dynamic> json) => _$SoundModelFromJson(json);
   Map<String,dynamic> toJson() => _$SoundModelToJson(this);
 }

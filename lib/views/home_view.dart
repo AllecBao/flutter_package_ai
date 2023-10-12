@@ -67,6 +67,12 @@ class _HomeViewState extends State<HomeView> with WidgetsBindingObserver {
     await _player.play();
   }
 
+  Future<void> audioPlayNetUrl(String url) async {
+    _player.stop();
+    await _player.setUrl(url);
+    await _player.play();
+  }
+
   Future<void> record() async {
     try {
       if (await _audioRecorder.hasPermission()) {
@@ -163,7 +169,12 @@ class _HomeViewState extends State<HomeView> with WidgetsBindingObserver {
       print(res);
       if (res["code"] == '10000') {
         SoundModel soundRes = SoundModel.fromJson(res["res"]);
+
         var data = {"isNativePage": soundRes.nativePage, "url": soundRes.url};
+        if(soundRes.wavUrl != null && soundRes.wavUrl?.isNotEmpty == true){
+          //如果需要播放语音，先播放语音
+          await audioPlayNetUrl(soundRes.wavUrl!);
+        }
         if (soundRes.url != null && soundRes.url?.isNotEmpty == true) {
           recording = 0;
           nav.pop(data);
