@@ -2,6 +2,7 @@ import 'dart:async';
 
 import 'package:cached_network_image/cached_network_image.dart';
 import 'package:dio/dio.dart' as dio;
+import 'package:dio/dio.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
@@ -15,8 +16,15 @@ import '../utils/file_util.dart';
 
 class HomeView extends StatefulWidget {
   final int? time;
+  final bool isDebug;
+  final double scaleWidth;
 
-  const HomeView({Key? key, this.time}) : super(key: key);
+  const HomeView({
+    Key? key,
+    this.time,
+    this.isDebug = false,
+    this.scaleWidth = 1,
+  }) : super(key: key);
 
   @override
   createState() => _HomeViewState();
@@ -27,10 +35,12 @@ class _HomeViewState extends State<HomeView> with WidgetsBindingObserver {
   Timer? _ampTimer;
   Amplitude? _amplitude;
   int stopCount = 0;
-  int validCount = 0;//有效语音时长
+  int validCount = 0; //有效语音时长
   int talkTime = 0;
   bool startSuccess = false;
   final _player = AudioPlayer();
+  double scaleWidth = 1;
+  final CancelToken _cancelToken = CancelToken();
 
   // final audioStart =
   //     'https://ptt-resource.oss-cn-hangzhou.aliyuncs.com/ai/audios/sound_start.wav';
@@ -45,31 +55,28 @@ class _HomeViewState extends State<HomeView> with WidgetsBindingObserver {
   @override
   void initState() {
     super.initState();
+    scaleWidth = widget.scaleWidth;
     imageBg =
         'https://ptt-resource.oss-cn-hangzhou.aliyuncs.com/ptt/images/img_aidialog_bg.png?time=${widget.time ?? DateTime.now().millisecondsSinceEpoch}';
-    // print('------>>>>>>>>$imageBg');
+    log(imageBg);
     WidgetsBinding.instance.addObserver(this);
-    WidgetsBinding.instance.addPostFrameCallback( (timeStamp) async {
+    WidgetsBinding.instance.addPostFrameCallback((timeStamp) async {
       await audioPlay(audioStart);
       record();
     });
   }
 
-
-
-  Future<void> audioPlay(String url) async {
+  Future<void> audioPlay(String url, {bool isNet = false}) async {
     _player.stop();
-    await _player.setAsset(
-      url,
-      package: 'ptt_ai_package',
-    );
-    // await _player.setUrl(url);
-    await _player.play();
-  }
+    if (isNet) {
+      await _player.setUrl(url);
+    } else {
+      await _player.setAsset(
+        url,
+        package: 'ptt_ai_package',
+      );
+    }
 
-  Future<void> audioPlayNetUrl(String url) async {
-    _player.stop();
-    await _player.setUrl(url);
     await _player.play();
   }
 
@@ -91,23 +98,22 @@ class _HomeViewState extends State<HomeView> with WidgetsBindingObserver {
         talkTime = 0;
         _ampTimer =
             Timer.periodic(const Duration(milliseconds: 200), (Timer t) async {
-
-            talkTime++;
-            if (talkTime > 11 * 5) {
-              talkTime = 0;
-              stopRecorder();
-              return;
-            }
+          talkTime++;
+          if (talkTime > 11 * 5) {
+            talkTime = 0;
+            stopRecorder();
+            return;
+          }
           _amplitude = await _audioRecorder.getAmplitude();
 
           final amplitudeCurrent = _amplitude?.current;
-          // print('*********value:$amplitudeCurrent');
+          // log('*********value:$amplitudeCurrent');
           if (amplitudeCurrent != null) {
             if (amplitudeCurrent < -24) {
-              if(validCount<5){
+              if (validCount < 5) {
                 validCount = 0;
               }
-              if(validCount>5){
+              if (validCount > 5) {
                 stopCount++;
                 if (stopCount >= 7) {
                   stopCount = 0;
@@ -128,7 +134,7 @@ class _HomeViewState extends State<HomeView> with WidgetsBindingObserver {
         });
       }
     } catch (e) {
-      // print('------>>>>>>>>e$e');
+      log('$e');
       if (e.runtimeType == PlatformException) {
         Fluttertoast.showToast(msg: '请开启麦克风权限', gravity: ToastGravity.CENTER)
             .then((value) {
@@ -139,12 +145,12 @@ class _HomeViewState extends State<HomeView> with WidgetsBindingObserver {
     }
   }
 
-  void stopRecorder() async {
+  Future<void> stopRecorder() async {
     var nav = Navigator.of(context);
     _ampTimer?.cancel();
     final String? path = await _audioRecorder.stop();
 
-    if(validCount<5){
+    if (validCount < 5) {
       setState(() {
         recording = 2;
       });
@@ -164,16 +170,20 @@ class _HomeViewState extends State<HomeView> with WidgetsBindingObserver {
       setState(() {
         recording = 0;
       });
-      var resp = await Api.voiceToTextToSkip(formData);
+      var resp =
+          await Api.voiceToTextToSkip(formData, cancelToken: _cancelToken);
+      if (resp == null || resp.data == null) {
+        log('resp:$resp---resp.data:${resp.data}');
+        return;
+      }
       var res = resp.data;
-      print(res);
+      log(res);
       if (res["code"] == '10000') {
         SoundModel soundRes = SoundModel.fromJson(res["res"]);
-
         var data = {"isNativePage": soundRes.nativePage, "url": soundRes.url};
-        if(soundRes.wavUrl != null && soundRes.wavUrl?.isNotEmpty == true){
+        if (soundRes.wavUrl != null && soundRes.wavUrl?.isNotEmpty == true) {
           //如果需要播放语音，先播放语音
-          await audioPlayNetUrl(soundRes.wavUrl!);
+          await audioPlay(soundRes.wavUrl!, isNet: true);
         }
         if (soundRes.url != null && soundRes.url?.isNotEmpty == true) {
           recording = 0;
@@ -191,7 +201,7 @@ class _HomeViewState extends State<HomeView> with WidgetsBindingObserver {
           });
         }
 
-        // print(data);
+        // log(data);
       } else {
         setState(() {
           recording = 2;
@@ -222,181 +232,227 @@ class _HomeViewState extends State<HomeView> with WidgetsBindingObserver {
     return Scaffold(
       backgroundColor: Colors.transparent,
       body: Center(
-        child: Container(
-          decoration: BoxDecoration(
-            borderRadius: const BorderRadius.all(
-              Radius.circular(10),
-            ),
-            image: DecorationImage(
-              // image: AssetImage(
-              //   'assets/images/img_aidialog_bg.png',
-              //   package: 'ptt_ai_package',
-              // ),
-              // image: NetworkImage(
-              //     'https://ptt-resource.oss-cn-hangzhou.aliyuncs.com/ptt/images/img_aidialog_bg.png?time=${widget.time ??  DateTime.now().millisecondsSinceEpoch}',),
-              image: CachedNetworkImageProvider(imageBg),
-            ),
-          ),
-          child: AspectRatio(
-            aspectRatio: 3 / 2,
-            child: Container(
-              margin: const EdgeInsets.symmetric(horizontal: 18, vertical: 33),
-              child: Row(
-                children: [
-                  Expanded(
-                    flex: 4,
-                    child: Container(),
-                  ),
-                  Expanded(
-                      flex: 5,
-                      child: Stack(
-                        children: [
-                          Positioned(
-                            top: 20,
-                            right: 20,
-                            child: GestureDetector(
-                              onTap: () {
-                                // stopRecorder();
-                                navPopUp();
-                              },
-                              child: Container(
-                                width: 60,
-                                height: 60,
-                                color: const Color(0x00000001),
-                              ),
-                            ),
-                          ),
-                          SizedBox(
-                            width: double.infinity,
-                            child: Column(
-                              mainAxisAlignment: MainAxisAlignment.center,
-                              children: [
-                                const Text(
-                                  '你可以这样说',
-                                  style: TextStyle(
-                                    color: Colors.white,
-                                    fontSize: 16,
-                                  ),
-                                ),
-                                const SizedBox(
-                                  height: 20,
-                                ),
-                                 const FittedBox(
-                                   child:  Text(
-                                     '“庭妹妹,我想要活酵母”',
-                                     style: TextStyle(
-                                       color: Colors.white,
-                                       fontSize: 18,
-                                       fontWeight: FontWeight.bold,
-                                     ),
-                                   ),
-                                 ),
-                                const SizedBox(
-                                  height: 10,
-                                ),
-                                if (recording == 1)
-                                  Image.asset(
-                                    'assets/images/ai_play.gif',
-                                    package: 'ptt_ai_package',
-                                    height: 35,
-                                    fit: BoxFit.contain,
-                                  )
-                                else if (recording == 0)
-                                  Center(
-                                    child: Row(
-                                      crossAxisAlignment:
-                                          CrossAxisAlignment.center,
-                                      mainAxisAlignment:
-                                          MainAxisAlignment.center,
-                                      mainAxisSize: MainAxisSize.max,
-                                      children: const [
-                                        CupertinoActivityIndicator(
-                                          color: Colors.white,
-                                        ),
-                                        SizedBox(
-                                          width: 5,
-                                        ),
-                                        Text(
-                                          '处理中...',
-                                          style: TextStyle(
-                                            color: Colors.white,
-                                            fontSize: 16,
-                                            fontWeight: FontWeight.normal,
-                                          ),
-                                        ),
-                                      ],
-                                    ),
-                                  )
-                                else
-                                  const Center(
-                                    child: Text(
-                                      '没找到您想要的结果',
-                                      style: TextStyle(
-                                        color: Colors.white,
-                                        fontSize: 16,
-                                        fontWeight: FontWeight.normal,
-                                      ),
-                                    ),
-                                  ),
-                                 Center(
-                                    child: GestureDetector(
-                                      onTap: (){
-                                        if(recording == 1){
-                                          validCount=5;
-                                          stopRecorder();
-                                        }
-                                      },
-                                      child: Container(
-                                          margin: const EdgeInsets.only(top: 10),
-                                          height: 38,
-                                          width: 80,
-                                          decoration: BoxDecoration(
-                                              borderRadius: BorderRadius.circular(19),
-                                              gradient: LinearGradient(
-                                                  begin: Alignment.centerLeft,
-                                                  end: Alignment.centerRight,
-                                                  colors: recording==1 ? [
-                                                    const Color(0x8812336a),
-                                                    const Color(0x8806ced9),
-                                                    ] : [
-                                                    const Color(0x4412336a),
-                                                    const Color(0x4406ced9),
-                                                  ]
-                                              )
-                                          ),
-                                          child: Center(
-                                            child: Text('完成',
-                                              style: TextStyle(
-                                                color: recording==1 ? Colors.white:Colors.grey,
-                                                fontWeight: FontWeight.bold,
-                                              ),
-                                            ),
-                                          )
-                                      ),
-                                    ),
-                                )
-                              ],
-                            ),
-                          ),
-
-                        ],
-                      )),
-                  const SizedBox(width: 5,),
-                ],
+        child: Stack(
+          alignment: AlignmentDirectional.center,
+          children: [
+            InkWell(
+              highlightColor: Colors.transparent,
+              splashColor: Colors.transparent,
+              onTap: () {
+                Navigator.pop(context);
+              },
+              child: const SizedBox(
+                width: double.infinity,
+                height: double.infinity,
               ),
             ),
-          ),
+            IgnorePointer(
+              child: Container(
+                decoration: BoxDecoration(
+                  borderRadius: BorderRadius.all(
+                    Radius.circular(10 * scaleWidth),
+                  ),
+                  image: DecorationImage(
+                    image: CachedNetworkImageProvider(imageBg),
+                  ),
+                ),
+              ),
+            ),
+            AspectRatio(
+              aspectRatio: 3 / 2,
+              child: InkWell(
+                onTap: () {},
+                highlightColor: Colors.transparent,
+                splashColor: Colors.transparent,
+                child: Container(
+                  margin: EdgeInsets.symmetric(
+                      horizontal: 18 * scaleWidth, vertical: 33 * scaleWidth),
+                  child: Row(
+                    children: [
+                      const Expanded(
+                        flex: 4,
+                        child: SizedBox(),
+                      ),
+                      Expanded(
+                          flex: 5,
+                          child: Column(
+                            mainAxisAlignment: MainAxisAlignment.start,
+                            children: [
+                              Container(
+                                width: double.infinity,
+                                alignment: Alignment.topRight,
+                                child: InkWell(
+                                  onTap: () {
+                                    Navigator.pop(context);
+                                  },
+                                  highlightColor: Colors.transparent,
+                                  splashColor: Colors.transparent,
+                                  child: SizedBox(
+                                    width: 46 * scaleWidth,
+                                    height: 26 * scaleWidth,
+                                  ),
+                                ),
+                              ),
+                              Text(
+                                '你可以这样说',
+                                style: TextStyle(
+                                  color: Colors.white,
+                                  fontSize: 16 * scaleWidth,
+                                ),
+                              ),
+                              SizedBox(
+                                height: 14 * scaleWidth,
+                              ),
+                              FittedBox(
+                                child: Text(
+                                  '“庭妹妹,我想要活酵母”',
+                                  style: TextStyle(
+                                    color: Colors.white,
+                                    fontSize: 18 * scaleWidth,
+                                    fontWeight: FontWeight.bold,
+                                  ),
+                                ),
+                              ),
+                              // SizedBox(
+                              //   height: 8 * scaleWidth,
+                              // ),
+                              Expanded(child: _recordStateWidget()),
+                            ],
+                          )),
+                      SizedBox(
+                        width: 5 * scaleWidth,
+                      ),
+                    ],
+                  ),
+                ),
+              ),
+            )
+          ],
         ),
       ),
     );
   }
 
+  Widget _recordStateWidget() {
+    if (recording == 1) {
+      return _recordingWidget();
+    } else if (recording == 0) {
+      return Padding(
+        padding: EdgeInsets.only(bottom: 18 * scaleWidth),
+        child: _recordHandleWidget(),
+      );
+    } else {
+      return Padding(
+        padding: EdgeInsets.only(bottom: 18 * scaleWidth),
+        child: _recordFailWidget(),
+      );
+    }
+  }
+
+  Widget _recordingWidget() {
+    return FittedBox(
+      fit: BoxFit.scaleDown,
+      child: Column(
+        children: [
+          Image.asset(
+            'assets/images/ai_play.gif',
+            package: 'ptt_ai_package',
+            height: 35 * scaleWidth,
+            fit: BoxFit.contain,
+          ),
+          InkWell(
+            onTap: () {
+              if (recording == 1) {
+                validCount = 5;
+                stopRecorder();
+              }
+            },
+            highlightColor: Colors.transparent,
+            splashColor: Colors.transparent,
+            child: Container(
+                margin: const EdgeInsets.only(top: 2),
+                height: 38 * scaleWidth,
+                width: 80 * scaleWidth,
+                decoration: BoxDecoration(
+                    borderRadius: BorderRadius.circular(29),
+                    gradient: LinearGradient(
+                        begin: Alignment.centerLeft,
+                        end: Alignment.centerRight,
+                        colors: recording == 1
+                            ? [
+                                const Color(0x8812336a),
+                                const Color(0x8806ced9),
+                              ]
+                            : [
+                                const Color(0x4412336a),
+                                const Color(0x4406ced9),
+                              ])),
+                child: Center(
+                  child: Text(
+                    '完成',
+                    style: TextStyle(
+                      color: recording == 1 ? Colors.white : Colors.grey,
+                      fontWeight: FontWeight.bold,
+                    ),
+                  ),
+                )),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _recordHandleWidget() {
+    return Center(
+      child: Row(
+        crossAxisAlignment: CrossAxisAlignment.center,
+        mainAxisAlignment: MainAxisAlignment.center,
+        mainAxisSize: MainAxisSize.max,
+        children: [
+          const CupertinoActivityIndicator(
+            color: Colors.white,
+          ),
+          SizedBox(
+            width: 5 * scaleWidth,
+          ),
+          Text(
+            '处理中...',
+            style: TextStyle(
+              color: Colors.white,
+              fontSize: 16 * scaleWidth,
+              fontWeight: FontWeight.normal,
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _recordFailWidget() {
+    return Center(
+      child: Text(
+        '没找到您想要的结果',
+        style: TextStyle(
+          color: Colors.white,
+          fontSize: 16 * scaleWidth,
+          fontWeight: FontWeight.normal,
+        ),
+      ),
+    );
+  }
+
+  void log(dynamic log) {
+    if (widget.isDebug) {
+      print('PTT_AI>>>>>>>>>>$log');
+    }
+  }
+
   @override
   void dispose() {
-    // print('******dispose');
     _audioRecorder.dispose();
     _ampTimer?.cancel();
     _player.dispose();
+    _cancelToken.cancel();
     WidgetsBinding.instance.removeObserver(this);
     super.dispose();
   }
@@ -409,10 +465,10 @@ class _HomeViewState extends State<HomeView> with WidgetsBindingObserver {
         if (startSuccess) {
           record();
         }
-        // print('------>>>>>>>>resumed进入前台');
+        // log('进入前台');
         break;
       case AppLifecycleState.inactive:
-        // print('------>>>>>>>>inactive进入后台');
+        // log('进入后台');
         if (startSuccess) {
           try {
             final isRecording = await _audioRecorder.isRecording();
@@ -423,10 +479,10 @@ class _HomeViewState extends State<HomeView> with WidgetsBindingObserver {
         }
         break;
       case AppLifecycleState.paused:
-        // print('------>>>>>>>>paused应用暂停');
+        // log('应用暂停');
         break;
       case AppLifecycleState.detached:
-        // print('------>>>>>>>>detached');
+        // log('detached');
         break;
     }
   }

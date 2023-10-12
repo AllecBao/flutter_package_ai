@@ -45,26 +45,35 @@ class RequestService{
     );
   }
 
-  Future<Response> fetchData( String method, String path,Map<String,dynamic>? params,Object? data) async {
+  Future<Response?> fetchData( String method, String path,Map<String,dynamic>? params,Object? data, {CancelToken? cancelToken,}) async {
     try{
       Response response;
       if(method=='get'){
-        response = await _dio.get(path,queryParameters: params,data:data);
+        response = await _dio.get(path,queryParameters: params,data:data,cancelToken: cancelToken);
       }else if(method=='post'){
-        response = await _dio.post(path,queryParameters: params,data:data);
+        response = await _dio.post(path,queryParameters: params,data:data,cancelToken: cancelToken);
       }else if(method=='put'){
-        response = await _dio.put(path,queryParameters: params,data:data);
+        response = await _dio.put(path,queryParameters: params,data:data,cancelToken: cancelToken);
       }else if(method=='delete'){
-        response = await _dio.delete(path,queryParameters: params,data:data);
+        response = await _dio.delete(path,queryParameters: params,data:data,cancelToken: cancelToken);
       }else if(method=='file'){
         _dio.options.headers['Content-Type'] = 'multipart/form-data';
-        response = await _dio.post(path,queryParameters: params,data:data);
+        response = await _dio.post(path,queryParameters: params,data:data,cancelToken: cancelToken);
       }else {
-        response = await _dio.get(path, queryParameters: params, data: data);
+        response = await _dio.get(path, queryParameters: params, data: data,cancelToken: cancelToken);
       }
       return response;
-    }catch(e){
-      throw Exception(e);
+    } on DioException catch (e) {
+      if (CancelToken.isCancel(e)) {
+        // print("---->>>>>>>请求取消$e");
+      }
+      // print('1111111');
+      // throw Exception(e);
+      return Response(requestOptions: RequestOptions());
+    } on Exception catch(_){
+      // print('2222222222');
+      // throw Exception(e);
     }
+    return null;
   }
 }

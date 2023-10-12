@@ -19,7 +19,7 @@ dependencies:
   flutter_sound_record: ^3.3.0
   #  permission_handler: ^6.0.1
   fluttertoast: ^8.2.0
-  json_annotation: ^4.5.0
+#  json_annotation: ^4.5.0
   flutter_easyloading: ^3.0.5
   just_audio: ^0.9.34
   path: ^1.8.1
@@ -29,7 +29,7 @@ dev_dependencies:
   flutter_test:
     sdk: flutter
   flutter_lints: ^2.0.0
-  json_serializable: ^6.2.0
+#  json_serializable: ^6.2.0
   build_runner: ^2.1.11
 
 # For information on the generic Dart part of this file, see the
