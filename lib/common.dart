@@ -8,11 +8,14 @@ import 'views/home_view.dart';
 /// {"isNativePage": 是否是web地址, "url": 路由地址}
 /// isDebug：
 /// scaleWidth: 实际尺寸与UI设计的比例
+/// type: 0:录音；1:播报语音
 Future<dynamic> showMainView(
   context, {
   int? time,
   bool isDebug = false,
   double scaleWidth = 1,
+  int type = 0,
+  String? content,
 }) async {
   return await showModalBottomSheet(
       context: context,
