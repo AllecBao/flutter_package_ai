@@ -305,7 +305,7 @@ class _HomeViewState extends State<HomeView> with WidgetsBindingObserver {
                               ),
                               FittedBox(
                                 child: Text(
-                                  '“庭妹妹，请带我了解一下本月爆品”',
+                                  '“庭妹妹，请带我了解一下本月爆款”',
                                   style: TextStyle(
                                     color: Colors.white,
                                     fontSize: 18 * scaleWidth,
