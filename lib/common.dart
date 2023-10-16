@@ -15,8 +15,9 @@ Future<dynamic> showMainView(
   double scaleWidth = 1,
   int type = 0,
   String? audioText, //如果有值，则自动播放内容语音
-  String? promotText, //弹框提示词
-  String? imageBg, //背景图
+  String? promptText, //弹框提示词
+  String? playAudioImgBg, //播放背景图
+  String? recordAudioImgBg, //录音背景图
 }) async {
   return await showModalBottomSheet(
       context: context,
@@ -35,7 +36,8 @@ Future<dynamic> showMainView(
           isDebug: isDebug,
           scaleWidth: scaleWidth,
           audioText: audioText,
-          promotText: promotText,
+          promotText: promptText,
+          imageBg: playAudioImgBg ?? recordAudioImgBg,
         );
       });
 }
