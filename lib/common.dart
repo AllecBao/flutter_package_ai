@@ -15,7 +15,8 @@ Future<dynamic> showMainView(
   bool isDebug = false,
   double scaleWidth = 1,
   int type = 0,
-  String? content,
+  String? audioText,//如果有值，则自动播放内容语音
+  String? promotText,//弹框提示词
 }) async {
   return await showModalBottomSheet(
       context: context,
@@ -33,6 +34,8 @@ Future<dynamic> showMainView(
           time: time,
           isDebug: isDebug,
           scaleWidth: scaleWidth,
+          audioText: audioText,
+          promotText: promotText
         );
       });
 }

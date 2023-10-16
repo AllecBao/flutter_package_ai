@@ -1,4 +1,5 @@
 import 'dart:async';
+import 'dart:html';
 
 import 'package:cached_network_image/cached_network_image.dart';
 import 'package:dio/dio.dart' as dio;
@@ -18,12 +19,16 @@ class HomeView extends StatefulWidget {
   final int? time;
   final bool isDebug;
   final double scaleWidth;
+  final String? promotText;
+  final String? audioText;
 
   const HomeView({
     Key? key,
     this.time,
     this.isDebug = false,
     this.scaleWidth = 1,
+    this.promotText,
+    this.audioText
   }) : super(key: key);
 
   @override
@@ -41,6 +46,13 @@ class _HomeViewState extends State<HomeView> with WidgetsBindingObserver {
   final _player = AudioPlayer();
   double scaleWidth = 1;
   final CancelToken _cancelToken = CancelToken();
+  final _audioResource = {
+    '谢谢您选择我们的产品，愿它为您带来持久的美丽，祝您永远保持健康与光彩！' : 'https://resource.51ptt.net/ai/tts_output/zt_20231013163853.wav',
+    '感谢您购买我们的产品，希望它能让您更漂亮噢！祝您拥有美好的一天！' : 'https://resource.51ptt.net/ai/tts_output/zt_20231013163945.wav',
+    '亲亲，感谢您的支持，愿我们的产品能令您焕发出独特的魅力，祝您美丽动人！' : 'https://resource.51ptt.net/ai/tts_output/zt_20231013164024.wav',
+    '嗨，很高兴被你选中！非常感谢你的购买，祝你每天喜笑颜开！' : 'https://resource.51ptt.net/ai/tts_output/zt_20231013164135.wav',
+    '亲爱的，感谢你为自己的美丽投资！衷心希望我们能让你每一天都光彩照人、自信满满！' : 'https://resource.51ptt.net/ai/tts_output/zt_20231013164200.wav'
+  };
 
   // final audioStart =
   //     'https://ptt-resource.oss-cn-hangzhou.aliyuncs.com/ai/audios/sound_start.wav';
@@ -61,13 +73,30 @@ class _HomeViewState extends State<HomeView> with WidgetsBindingObserver {
     log(imageBg);
     WidgetsBinding.instance.addObserver(this);
     WidgetsBinding.instance.addPostFrameCallback((timeStamp) async {
+
+      //播放语音
+      if(widget.audioText != null){
+        var audioUrl = null;
+        var text = widget.audioText;
+        if( _audioResource.containsKey(text) ){
+          audioUrl = _audioResource[text];
+        }else{
+          audioUrl = await textToAudio(text);
+        }
+        if(audioUrl != null) {
+          await audioPlay(audioUrl, isNet: true, isAutoClose: true);
+          return;
+        }
+      }
       await audioPlay(audioStart);
       record();
     });
   }
 
-  Future<void> audioPlay(String url, {bool isNet = false}) async {
-    _player.stop();
+  Future<void> audioPlay(String url, {bool isNet = false,bool isAutoClose = false}) async {
+    if(_player.playing){
+      _player.stop();
+    }
     if (isNet) {
       await _player.setUrl(url);
     } else {
@@ -78,6 +107,36 @@ class _HomeViewState extends State<HomeView> with WidgetsBindingObserver {
     }
 
     await _player.play();
+
+    //播放完是否自动关闭
+    if(isAutoClose){
+      Navigator.pop(context);
+    }
+  }
+
+  //文字转语音
+  Future<String?> textToAudio(text) async {
+    if(text != null){
+      var params = {
+        'alpha':1.15,
+        'gen_exp_name':'zt',
+        'text':text,
+        'upload_oss':true
+      };
+      var resp =
+      await Api.textToVoice( params , cancelToken: _cancelToken);
+      if (resp == null || resp.data == null) {
+        return null;
+      }
+      var res = resp.data;
+      if (res["code"] == '10000') {
+        var result = res["res"];
+        if(result != null){
+          return result;
+        }
+      }
+    }
+    return null;
   }
 
   Future<void> record() async {
@@ -305,7 +364,7 @@ class _HomeViewState extends State<HomeView> with WidgetsBindingObserver {
                               ),
                               FittedBox(
                                 child: Text(
-                                  '“庭妹妹，请带我了解一下本月爆款”',
+                                  widget.promotText ?? '“庭妹妹，请带我了解一下本月爆款”',
                                   style: TextStyle(
                                     color: Colors.white,
                                     fontSize: 18 * scaleWidth,
@@ -451,6 +510,10 @@ class _HomeViewState extends State<HomeView> with WidgetsBindingObserver {
   void dispose() {
     _audioRecorder.dispose();
     _ampTimer?.cancel();
+
+    if(_player.playing){
+      _player.stop();
+    }
     _player.dispose();
     _cancelToken.cancel();
     WidgetsBinding.instance.removeObserver(this);
