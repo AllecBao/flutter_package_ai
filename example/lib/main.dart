@@ -31,6 +31,8 @@ class _MyAppState extends State<MyApp> {
                       context,
                       time: 12345678,
                       isDebug: true,
+                        promotText: '“庭妹妹，请带我了解一下本月爆款”',
+                        audioText:'谢谢您选择我们的产品，愿它为您带来持久的美丽，祝您永远保持健康与光彩！',
                     );
                   },
                   child: const Text('点击弹出AI'),

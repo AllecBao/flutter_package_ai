@@ -1,4 +1,3 @@
-// import 'pages.dart';
 import 'package:flutter/material.dart';
 
 import 'views/home_view.dart';
@@ -15,8 +14,9 @@ Future<dynamic> showMainView(
   bool isDebug = false,
   double scaleWidth = 1,
   int type = 0,
-  String? audioText,//如果有值，则自动播放内容语音
-  String? promotText,//弹框提示词
+  String? audioText, //如果有值，则自动播放内容语音
+  String? promotText, //弹框提示词
+  String? imageBg, //背景图
 }) async {
   return await showModalBottomSheet(
       context: context,
@@ -35,7 +35,7 @@ Future<dynamic> showMainView(
           isDebug: isDebug,
           scaleWidth: scaleWidth,
           audioText: audioText,
-          promotText: promotText
+          promotText: promotText,
         );
       });
 }

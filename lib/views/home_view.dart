@@ -1,5 +1,4 @@
 import 'dart:async';
-import 'dart:html';
 
 import 'package:cached_network_image/cached_network_image.dart';
 import 'package:dio/dio.dart' as dio;
@@ -21,6 +20,7 @@ class HomeView extends StatefulWidget {
   final double scaleWidth;
   final String? promotText;
   final String? audioText;
+  final String? imageBg;
 
   const HomeView({
     Key? key,
@@ -28,7 +28,8 @@ class HomeView extends StatefulWidget {
     this.isDebug = false,
     this.scaleWidth = 1,
     this.promotText,
-    this.audioText
+    this.audioText,
+    this.imageBg,
   }) : super(key: key);
 
   @override
@@ -47,11 +48,16 @@ class _HomeViewState extends State<HomeView> with WidgetsBindingObserver {
   double scaleWidth = 1;
   final CancelToken _cancelToken = CancelToken();
   final _audioResource = {
-    '谢谢您选择我们的产品，愿它为您带来持久的美丽，祝您永远保持健康与光彩！' : 'https://resource.51ptt.net/ai/tts_output/zt_20231013163853.wav',
-    '感谢您购买我们的产品，希望它能让您更漂亮噢！祝您拥有美好的一天！' : 'https://resource.51ptt.net/ai/tts_output/zt_20231013163945.wav',
-    '亲亲，感谢您的支持，愿我们的产品能令您焕发出独特的魅力，祝您美丽动人！' : 'https://resource.51ptt.net/ai/tts_output/zt_20231013164024.wav',
-    '嗨，很高兴被你选中！非常感谢你的购买，祝你每天喜笑颜开！' : 'https://resource.51ptt.net/ai/tts_output/zt_20231013164135.wav',
-    '亲爱的，感谢你为自己的美丽投资！衷心希望我们能让你每一天都光彩照人、自信满满！' : 'https://resource.51ptt.net/ai/tts_output/zt_20231013164200.wav'
+    '谢谢您选择我们的产品，愿它为您带来持久的美丽，祝您永远保持健康与光彩！':
+        'https://resource.51ptt.net/ai/tts_output/zt_20231013163853.wav',
+    '感谢您购买我们的产品，希望它能让您更漂亮噢！祝您拥有美好的一天！':
+        'https://resource.51ptt.net/ai/tts_output/zt_20231013163945.wav',
+    '亲亲，感谢您的支持，愿我们的产品能令您焕发出独特的魅力，祝您美丽动人！':
+        'https://resource.51ptt.net/ai/tts_output/zt_20231013164024.wav',
+    '嗨，很高兴被你选中！非常感谢你的购买，祝你每天喜笑颜开！':
+        'https://resource.51ptt.net/ai/tts_output/zt_20231013164135.wav',
+    '亲爱的，感谢你为自己的美丽投资！衷心希望我们能让你每一天都光彩照人、自信满满！':
+        'https://resource.51ptt.net/ai/tts_output/zt_20231013164200.wav'
   };
 
   // final audioStart =
@@ -63,27 +69,33 @@ class _HomeViewState extends State<HomeView> with WidgetsBindingObserver {
   int recording = 1; // 0:录音处理中 1:正在录音 2:录音失败
 
   late String imageBg;
+  BuildContext? buildContext;
 
   @override
   void initState() {
     super.initState();
     scaleWidth = widget.scaleWidth;
-    imageBg =
-        'https://ptt-resource.oss-cn-hangzhou.aliyuncs.com/ptt/images/img_aidialog_bg.png?time=${widget.time ?? DateTime.now().millisecondsSinceEpoch}';
+    imageBg = widget.imageBg != null
+        ? widget.imageBg!
+        : 'https://ptt-resource.oss-cn-hangzhou.aliyuncs.com/ptt/images/img_aidialog_bg.png';
+    if (!imageBg.contains('time=')) {
+      imageBg =
+          '$imageBg?time=${widget.time ?? DateTime.now().millisecondsSinceEpoch}';
+    }
     log(imageBg);
     WidgetsBinding.instance.addObserver(this);
     WidgetsBinding.instance.addPostFrameCallback((timeStamp) async {
-
       //播放语音
-      if(widget.audioText != null){
-        var audioUrl = null;
+      buildContext = context;
+      if (widget.audioText != null) {
+        String? audioUrl;
         var text = widget.audioText;
-        if( _audioResource.containsKey(text) ){
+        if (_audioResource.containsKey(text)) {
           audioUrl = _audioResource[text];
-        }else{
+        } else {
           audioUrl = await textToAudio(text);
         }
-        if(audioUrl != null) {
+        if (audioUrl != null) {
           await audioPlay(audioUrl, isNet: true, isAutoClose: true);
           return;
         }
@@ -93,8 +105,9 @@ class _HomeViewState extends State<HomeView> with WidgetsBindingObserver {
     });
   }
 
-  Future<void> audioPlay(String url, {bool isNet = false,bool isAutoClose = false}) async {
-    if(_player.playing){
+  Future<void> audioPlay(String url,
+      {bool isNet = false, bool isAutoClose = false}) async {
+    if (_player.playing) {
       _player.stop();
     }
     if (isNet) {
@@ -109,29 +122,28 @@ class _HomeViewState extends State<HomeView> with WidgetsBindingObserver {
     await _player.play();
 
     //播放完是否自动关闭
-    if(isAutoClose){
-      Navigator.pop(context);
+    if (isAutoClose && buildContext != null) {
+      Navigator.pop(buildContext!);
     }
   }
 
   //文字转语音
   Future<String?> textToAudio(text) async {
-    if(text != null){
+    if (text != null) {
       var params = {
-        'alpha':1.15,
-        'gen_exp_name':'zt',
-        'text':text,
-        'upload_oss':true
+        'alpha': 1.15,
+        'gen_exp_name': 'zt',
+        'text': text,
+        'upload_oss': true
       };
-      var resp =
-      await Api.textToVoice( params , cancelToken: _cancelToken);
+      var resp = await Api.textToVoice(params, cancelToken: _cancelToken);
       if (resp == null || resp.data == null) {
         return null;
       }
       var res = resp.data;
       if (res["code"] == '10000') {
         var result = res["res"];
-        if(result != null){
+        if (result != null) {
           return result;
         }
       }
@@ -333,51 +345,32 @@ class _HomeViewState extends State<HomeView> with WidgetsBindingObserver {
                         child: SizedBox(),
                       ),
                       Expanded(
-                          flex: 5,
-                          child: Column(
-                            mainAxisAlignment: MainAxisAlignment.start,
-                            children: [
-                              Container(
-                                width: double.infinity,
-                                alignment: Alignment.topRight,
-                                child: InkWell(
-                                  onTap: () {
-                                    Navigator.pop(context);
-                                  },
-                                  highlightColor: Colors.transparent,
-                                  splashColor: Colors.transparent,
-                                  child: SizedBox(
-                                    width: 46 * scaleWidth,
-                                    height: 26 * scaleWidth,
-                                  ),
+                        flex: 5,
+                        child: Column(
+                          mainAxisAlignment: MainAxisAlignment.start,
+                          children: [
+                            Container(
+                              width: double.infinity,
+                              alignment: Alignment.topRight,
+                              child: InkWell(
+                                onTap: () {
+                                  Navigator.pop(context);
+                                },
+                                highlightColor: Colors.transparent,
+                                splashColor: Colors.transparent,
+                                child: SizedBox(
+                                  width: 46 * scaleWidth,
+                                  height: 26 * scaleWidth,
                                 ),
                               ),
-                              Text(
-                                '你可以这样说',
-                                style: TextStyle(
-                                  color: Colors.white,
-                                  fontSize: 16 * scaleWidth,
-                                ),
-                              ),
-                              SizedBox(
-                                height: 14 * scaleWidth,
-                              ),
-                              FittedBox(
-                                child: Text(
-                                  widget.promotText ?? '“庭妹妹，请带我了解一下本月爆款”',
-                                  style: TextStyle(
-                                    color: Colors.white,
-                                    fontSize: 18 * scaleWidth,
-                                    fontWeight: FontWeight.bold,
-                                  ),
-                                ),
-                              ),
-                              // SizedBox(
-                              //   height: 8 * scaleWidth,
-                              // ),
-                              Expanded(child: _recordStateWidget()),
-                            ],
-                          )),
+                            ),
+                            if (widget.audioText == null)
+                              _rightRecordWidget()
+                            else
+                              _rightAudioTextWidget(),
+                          ],
+                        ),
+                      ),
                       SizedBox(
                         width: 5 * scaleWidth,
                       ),
@@ -387,6 +380,54 @@ class _HomeViewState extends State<HomeView> with WidgetsBindingObserver {
               ),
             )
           ],
+        ),
+      ),
+    );
+  }
+
+  Widget _rightRecordWidget() {
+    return Expanded(
+      child: Column(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          Text(
+            '你可以这样说',
+            style: TextStyle(
+              color: Colors.white,
+              fontSize: 16 * scaleWidth,
+            ),
+          ),
+          SizedBox(
+            height: 14 * scaleWidth,
+          ),
+          FittedBox(
+            child: Text(
+              widget.promotText ?? '“庭妹妹，请带我了解一下本月爆款”',
+              style: TextStyle(
+                color: Colors.white,
+                fontSize: 18 * scaleWidth,
+                fontWeight: FontWeight.bold,
+              ),
+            ),
+          ),
+          Expanded(child: _recordStateWidget()),
+        ],
+      ),
+    );
+  }
+
+  Widget _rightAudioTextWidget() {
+    return Expanded(
+      child: Center(
+        child: Padding(
+          padding: EdgeInsets.only(left: 8 * scaleWidth, right: 0 * scaleWidth),
+          child: Text(
+            widget.audioText ?? '',
+            style: TextStyle(
+              color: Colors.white,
+              fontSize: 16 * scaleWidth,
+            ),
+          ),
         ),
       ),
     );
@@ -508,10 +549,11 @@ class _HomeViewState extends State<HomeView> with WidgetsBindingObserver {
 
   @override
   void dispose() {
+    buildContext = null;
     _audioRecorder.dispose();
     _ampTimer?.cancel();
 
-    if(_player.playing){
+    if (_player.playing) {
       _player.stop();
     }
     _player.dispose();
