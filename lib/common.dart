@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:ptt_ai_package/common/config.dart';
 
 import 'views/home_view.dart';
 
@@ -8,17 +9,19 @@ import 'views/home_view.dart';
 /// isDebug：
 /// scaleWidth: 实际尺寸与UI设计的比例
 /// type: 0:录音；1:播报语音
+/// openVolume: 是否打开声音
 Future<dynamic> showMainView(
   context, {
+  required int type, //0:录音；1:播报语音
   int? time,
   bool isDebug = false,
   double scaleWidth = 1,
-  int type = 0,
-  String? audioText, //如果有值，则自动播放内容语音
+  bool? openVolume,
+  List<String>? audioTextArray, //如果有值，则自动播放内容语音
   String? promptText, //弹框提示词
-  String? playAudioImgBg, //播放背景图
-  String? recordAudioImgBg, //录音背景图
+  String? imageBg, //背景图
 }) async {
+  debug = isDebug;
   return await showModalBottomSheet(
       context: context,
       routeSettings: const RouteSettings(name: '/ptt/aiDialog'),
@@ -32,12 +35,14 @@ Future<dynamic> showMainView(
               topLeft: (Radius.circular(10)), topRight: (Radius.circular(10)))),
       builder: (BuildContext context) {
         return HomeView(
+          type: type,
           time: time,
           isDebug: isDebug,
           scaleWidth: scaleWidth,
-          audioText: audioText,
-          promotText: promptText,
-          imageBg: playAudioImgBg ?? recordAudioImgBg,
+          openVolume: openVolume,
+          audioTextArray: audioTextArray,
+          promptText: promptText,
+          imageBg: imageBg,
         );
       });
 }

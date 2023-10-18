@@ -10,25 +10,32 @@ import 'package:flutter_sound_record/flutter_sound_record.dart';
 import 'package:fluttertoast/fluttertoast.dart';
 import 'package:just_audio/just_audio.dart';
 
+import '../common/constant.dart';
 import '../http/api.dart';
+import '../model/audio_url_model.dart';
 import '../model/sound_model.dart';
 import '../utils/file_util.dart';
+import '../utils/log_util.dart';
 
 class HomeView extends StatefulWidget {
+  final int type; //0:录音；1:播报语音
   final int? time;
   final bool isDebug;
   final double scaleWidth;
-  final String? promotText;
-  final String? audioText;
+  final bool? openVolume;
+  final String? promptText;
+  final List<String>? audioTextArray;
   final String? imageBg;
 
   const HomeView({
     Key? key,
+    required this.type,
     this.time,
     this.isDebug = false,
     this.scaleWidth = 1,
-    this.promotText,
-    this.audioText,
+    this.openVolume,
+    this.promptText,
+    this.audioTextArray,
     this.imageBg,
   }) : super(key: key);
 
@@ -47,33 +54,17 @@ class _HomeViewState extends State<HomeView> with WidgetsBindingObserver {
   final _player = AudioPlayer();
   double scaleWidth = 1;
   final CancelToken _cancelToken = CancelToken();
-  final _audioResource = {
-    '谢谢您选择我们的产品，愿它为您带来持久的美丽，祝您永远保持健康与光彩！':
-        'https://resource.51ptt.net/ai/tts_output/zt_20231013163853.wav',
-    '感谢您购买我们的产品，希望它能让您更漂亮噢！祝您拥有美好的一天！':
-        'https://resource.51ptt.net/ai/tts_output/zt_20231013163945.wav',
-    '亲亲，感谢您的支持，愿我们的产品能令您焕发出独特的魅力，祝您美丽动人！':
-        'https://resource.51ptt.net/ai/tts_output/zt_20231013164024.wav',
-    '嗨，很高兴被你选中！非常感谢你的购买，祝你每天喜笑颜开！':
-        'https://resource.51ptt.net/ai/tts_output/zt_20231013164135.wav',
-    '亲爱的，感谢你为自己的美丽投资！衷心希望我们能让你每一天都光彩照人、自信满满！':
-        'https://resource.51ptt.net/ai/tts_output/zt_20231013164200.wav'
-  };
-
-  // final audioStart =
-  //     'https://ptt-resource.oss-cn-hangzhou.aliyuncs.com/ai/audios/sound_start.wav';
   final audioStart = 'assets/audio/sound_start.wav';
-
-  // final audioEnd =
-  //     'https://ptt-resource.oss-cn-hangzhou.aliyuncs.com/ai/audios/sound_end.mp3';
   int recording = 1; // 0:录音处理中 1:正在录音 2:录音失败
-
   late String imageBg;
   BuildContext? buildContext;
+  String? currentAudioText;
+  bool openVolume = true; // 是否打开声音
 
   @override
   void initState() {
     super.initState();
+    openVolume = widget.openVolume ?? true;
     scaleWidth = widget.scaleWidth;
     imageBg = widget.imageBg != null
         ? widget.imageBg!
@@ -85,23 +76,13 @@ class _HomeViewState extends State<HomeView> with WidgetsBindingObserver {
     log(imageBg);
     WidgetsBinding.instance.addObserver(this);
     WidgetsBinding.instance.addPostFrameCallback((timeStamp) async {
-      //播放语音
       buildContext = context;
-      if (widget.audioText != null) {
-        String? audioUrl;
-        var text = widget.audioText;
-        if (_audioResource.containsKey(text)) {
-          audioUrl = _audioResource[text];
-        } else {
-          audioUrl = await textToAudio(text);
-        }
-        if (audioUrl != null) {
-          await audioPlay(audioUrl, isNet: true, isAutoClose: true);
-          return;
-        }
+      if (widget.type == 1) {
+        await audioToTextAndPlay();
+      } else if (widget.type == 0) {
+        await audioPlay(audioStart);
+        record();
       }
-      await audioPlay(audioStart);
-      record();
     });
   }
 
@@ -118,7 +99,7 @@ class _HomeViewState extends State<HomeView> with WidgetsBindingObserver {
         package: 'ptt_ai_package',
       );
     }
-
+    await _player.setVolume(openVolume ? 1 : 0);
     await _player.play();
 
     //播放完是否自动关闭
@@ -127,28 +108,39 @@ class _HomeViewState extends State<HomeView> with WidgetsBindingObserver {
     }
   }
 
-  //文字转语音
-  Future<String?> textToAudio(text) async {
-    if (text != null) {
-      var params = {
-        'alpha': 1.15,
-        'gen_exp_name': 'zt',
-        'text': text,
-        'upload_oss': true
-      };
-      var resp = await Api.textToVoice(params, cancelToken: _cancelToken);
-      if (resp == null || resp.data == null) {
-        return null;
+  Future<void> audioToTextAndPlay() async {
+    final audioTextArray = widget.audioTextArray;
+    if (audioTextArray != null && audioTextArray.isNotEmpty) {
+      final audioUrlArray =
+          List<String?>.generate(audioTextArray.length, (_) => null);
+      final pathList = <AudioUrlModel>[];
+      for (int i = 0; i < audioTextArray.length; i++) {
+        if (Constant.audioResource.containsKey(audioTextArray[i])) {
+          audioUrlArray.setAll(i, [Constant.audioResource[audioTextArray[i]]]);
+        } else {
+          pathList.add(AudioUrlModel(index: i, path: audioTextArray[i]));
+        }
       }
-      var res = resp.data;
-      if (res["code"] == '10000') {
-        var result = res["res"];
-        if (result != null) {
-          return result;
+      final resList = await Api.textListToVoice(
+          audioPathList: pathList, cancelToken: _cancelToken);
+      if (resList != null) {
+        for (var element in resList) {
+          if (element.index != null) {
+            audioUrlArray.setAll(element.index!, [element.path]);
+          }
+        }
+      }
+      for (var i = 0; i < audioUrlArray.length; i++) {
+        var audioUrl = audioUrlArray[i];
+        if (audioUrl != null) {
+          setState(() {
+            currentAudioText = audioTextArray[i];
+          });
+          await audioPlay(audioUrl,
+              isNet: true, isAutoClose: (i + 1) == audioUrlArray.length);
         }
       }
     }
-    return null;
   }
 
   Future<void> record() async {
@@ -339,10 +331,29 @@ class _HomeViewState extends State<HomeView> with WidgetsBindingObserver {
                   margin: EdgeInsets.symmetric(
                       horizontal: 18 * scaleWidth, vertical: 33 * scaleWidth),
                   child: Row(
+                    crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
-                      const Expanded(
+                      Expanded(
                         flex: 4,
-                        child: SizedBox(),
+                        child: Row(
+                          children: [
+                            InkWell(
+                              onTap: () {
+                                setState(() {
+                                  openVolume = !openVolume;
+                                });
+                                _player.setVolume(openVolume ? 1 : 0);
+                              },
+                              child: Icon(
+                                openVolume
+                                    ? Icons.volume_up_rounded
+                                    : Icons.volume_off_rounded,
+                                size: 30 * scaleWidth,
+                                color: Colors.white,
+                              ),
+                            ),
+                          ],
+                        ),
                       ),
                       Expanded(
                         flex: 5,
@@ -364,9 +375,9 @@ class _HomeViewState extends State<HomeView> with WidgetsBindingObserver {
                                 ),
                               ),
                             ),
-                            if (widget.audioText == null)
+                            if (widget.type == 0)
                               _rightRecordWidget()
-                            else
+                            else if (widget.type == 1)
                               _rightAudioTextWidget(),
                           ],
                         ),
@@ -402,7 +413,7 @@ class _HomeViewState extends State<HomeView> with WidgetsBindingObserver {
           ),
           FittedBox(
             child: Text(
-              widget.promotText ?? '“庭妹妹，请带我了解一下本月爆款”',
+              widget.promptText ?? '“庭妹妹，请带我了解一下本月爆款”',
               style: TextStyle(
                 color: Colors.white,
                 fontSize: 18 * scaleWidth,
@@ -422,7 +433,7 @@ class _HomeViewState extends State<HomeView> with WidgetsBindingObserver {
         child: Padding(
           padding: EdgeInsets.only(left: 8 * scaleWidth, right: 0 * scaleWidth),
           child: Text(
-            widget.audioText ?? '',
+            currentAudioText ?? '',
             style: TextStyle(
               color: Colors.white,
               fontSize: 16 * scaleWidth,
@@ -539,12 +550,6 @@ class _HomeViewState extends State<HomeView> with WidgetsBindingObserver {
         ),
       ),
     );
-  }
-
-  void log(dynamic log) {
-    if (widget.isDebug) {
-      print('PTT_AI>>>>>>>>>>$log');
-    }
   }
 
   @override
