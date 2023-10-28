@@ -25,6 +25,7 @@ class HomeView extends StatefulWidget {
   final bool? openVolume;
   final String? promptText;
   final List<String>? audioTextArray;
+  final List<String?>? audioUrlArray;
   final String? imageBg;
 
   const HomeView({
@@ -36,6 +37,7 @@ class HomeView extends StatefulWidget {
     this.openVolume,
     this.promptText,
     this.audioTextArray,
+    this.audioUrlArray,
     this.imageBg,
   }) : super(key: key);
 
@@ -78,7 +80,14 @@ class _HomeViewState extends State<HomeView> with WidgetsBindingObserver {
     WidgetsBinding.instance.addPostFrameCallback((timeStamp) async {
       buildContext = context;
       if (widget.type == 1) {
-        await audioToTextAndPlay();
+        List<String?>? audioUrlArray;
+        if (widget.audioUrlArray != null &&
+            widget.audioUrlArray?.isNotEmpty == true) {
+          audioUrlArray = widget.audioUrlArray;
+        } else {
+          audioUrlArray = await getAudioUrlArray();
+        }
+        await audioUrlArrayPlay(audioUrlArray);
       } else if (widget.type == 0) {
         await audioPlay(audioStart);
         record();
@@ -108,7 +117,7 @@ class _HomeViewState extends State<HomeView> with WidgetsBindingObserver {
     }
   }
 
-  Future<void> audioToTextAndPlay() async {
+  Future<List<String?>?> getAudioUrlArray() async {
     final audioTextArray = widget.audioTextArray;
     if (audioTextArray != null && audioTextArray.isNotEmpty) {
       final audioUrlArray =
@@ -130,6 +139,16 @@ class _HomeViewState extends State<HomeView> with WidgetsBindingObserver {
           }
         }
       }
+      return audioUrlArray;
+    }
+    return null;
+  }
+
+  Future<void> audioUrlArrayPlay(List<String?>? audioUrlArray) async {
+    final audioTextArray = widget.audioTextArray;
+    if (audioUrlArray != null &&
+        audioTextArray != null &&
+        audioTextArray.isNotEmpty) {
       for (var i = 0; i < audioUrlArray.length; i++) {
         var audioUrl = audioUrlArray[i];
         if (audioUrl != null) {
@@ -344,12 +363,20 @@ class _HomeViewState extends State<HomeView> with WidgetsBindingObserver {
                                 });
                                 _player.setVolume(openVolume ? 1 : 0);
                               },
-                              child: Icon(
-                                openVolume
-                                    ? Icons.volume_up_rounded
-                                    : Icons.volume_off_rounded,
-                                size: 30 * scaleWidth,
-                                color: Colors.white,
+                              child: Padding(
+                                padding: EdgeInsets.only(
+                                  left: 8 * scaleWidth,
+                                  top: 3 * scaleWidth,
+                                  bottom: 3 * scaleWidth,
+                                  right: 10 * scaleWidth,
+                                ),
+                                child: Icon(
+                                  openVolume
+                                      ? Icons.volume_up_rounded
+                                      : Icons.volume_off_rounded,
+                                  size: 22 * scaleWidth,
+                                  color: Colors.white,
+                                ),
                               ),
                             ),
                           ],

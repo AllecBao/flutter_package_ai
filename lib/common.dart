@@ -1,6 +1,10 @@
+import 'package:dio/dio.dart';
 import 'package:flutter/material.dart';
 import 'package:ptt_ai_package/common/config.dart';
 
+import 'common/constant.dart';
+import 'http/api.dart';
+import 'model/audio_url_model.dart';
 import 'views/home_view.dart';
 
 /// 返回数据格式：{'errorMsg': '麦克风权限未打开','errorType':'1'}
@@ -20,8 +24,33 @@ Future<dynamic> showMainView(
   List<String>? audioTextArray, //如果有值，则自动播放内容语音
   String? promptText, //弹框提示词
   String? imageBg, //背景图
+  CancelToken? cancelToken,
 }) async {
   debug = isDebug;
+  List<String?>? audioUrlArray;
+  if (type == 1) {
+    if (audioTextArray != null && audioTextArray.isNotEmpty) {
+      audioUrlArray =
+          List<String?>.generate(audioTextArray.length, (_) => null);
+      final pathList = <AudioUrlModel>[];
+      for (int i = 0; i < audioTextArray.length; i++) {
+        if (Constant.audioResource.containsKey(audioTextArray[i])) {
+          audioUrlArray.setAll(i, [Constant.audioResource[audioTextArray[i]]]);
+        } else {
+          pathList.add(AudioUrlModel(index: i, path: audioTextArray[i]));
+        }
+      }
+      final resList = await Api.textListToVoice(
+          audioPathList: pathList, cancelToken: cancelToken);
+      if (resList != null) {
+        for (var element in resList) {
+          if (element.index != null) {
+            audioUrlArray.setAll(element.index!, [element.path]);
+          }
+        }
+      }
+    }
+  }
   return await showModalBottomSheet(
       context: context,
       routeSettings: const RouteSettings(name: '/ptt/aiDialog'),
@@ -41,6 +70,7 @@ Future<dynamic> showMainView(
           scaleWidth: scaleWidth,
           openVolume: openVolume,
           audioTextArray: audioTextArray,
+          audioUrlArray: audioUrlArray,
           promptText: promptText,
           imageBg: imageBg,
         );
