@@ -51,6 +51,9 @@ Future<dynamic> showMainView(
       }
     }
   }
+  if (cancelToken != null && cancelToken.isCancelled) {
+    return null;
+  }
   return await showModalBottomSheet(
       context: context,
       routeSettings: const RouteSettings(name: '/ptt/aiDialog'),
