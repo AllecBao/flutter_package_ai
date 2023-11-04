@@ -1,7 +1,7 @@
 name: ptt_ai_package
 description: A new Flutter project.
-version: 0.0.2
-homepage:
+version: 2.0.7
+homepage: 'none'
 
 environment:
   sdk: ">=2.17.6 <3.0.0"
@@ -10,20 +10,20 @@ environment:
 dependencies:
   flutter:
     sdk: flutter
-  dio: ^5.0.0
-  crypto: ^3.0.0
-  provider: ^6.0.0
-  path_provider: ^2.0.2
+  dio: ^5.3.3
+  crypto: ^3.0.3
+#  provider: ^6.0.5
+  path_provider: ^2.1.1
   cupertino_icons: ^1.0.2
   #  flutter_sound: ^8.4.2
-  flutter_sound_record: ^3.3.0
+  flutter_sound_record: ^3.3.2
   #  permission_handler: ^6.0.1
-  fluttertoast: ^8.2.0
+  fluttertoast: ^8.2.2
 #  json_annotation: ^4.5.0
-  flutter_easyloading: ^3.0.5
-  just_audio: ^0.9.34
-  path: ^1.8.1
-  cached_network_image: ^3.2.1
+#  flutter_easyloading: ^3.0.5
+  just_audio: ^0.9.35
+  path: ^1.8.3
+  cached_network_image: ^3.3.0
 
 dev_dependencies:
   flutter_test:

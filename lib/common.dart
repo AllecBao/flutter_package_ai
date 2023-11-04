@@ -17,7 +17,6 @@ import 'views/home_view.dart';
 Future<dynamic> showMainView(
   context, {
   required int type, //0:录音；1:播报语音
-  int? time,
   bool isDebug = false,
   double scaleWidth = 1,
   bool? openVolume,
@@ -68,7 +67,6 @@ Future<dynamic> showMainView(
       builder: (BuildContext context) {
         return HomeView(
           type: type,
-          time: time,
           isDebug: isDebug,
           scaleWidth: scaleWidth,
           openVolume: openVolume,
