@@ -10,25 +10,32 @@ import 'package:flutter_sound_record/flutter_sound_record.dart';
 import 'package:fluttertoast/fluttertoast.dart';
 import 'package:just_audio/just_audio.dart';
 
+import '../common/constant.dart';
 import '../http/api.dart';
+import '../model/audio_url_model.dart';
 import '../model/sound_model.dart';
 import '../utils/file_util.dart';
+import '../utils/log_util.dart';
 
 class HomeView extends StatefulWidget {
-  final int? time;
+  final int type; //0:录音；1:播报语音
   final bool isDebug;
   final double scaleWidth;
-  final String? promotText;
-  final String? audioText;
+  final bool? openVolume;
+  final String? promptText;
+  final List<String>? audioTextArray;
+  final List<String?>? audioUrlArray;
   final String? imageBg;
 
   const HomeView({
     Key? key,
-    this.time,
+    required this.type,
     this.isDebug = false,
     this.scaleWidth = 1,
-    this.promotText,
-    this.audioText,
+    this.openVolume,
+    this.promptText,
+    this.audioTextArray,
+    this.audioUrlArray,
     this.imageBg,
   }) : super(key: key);
 
@@ -37,71 +44,51 @@ class HomeView extends StatefulWidget {
 }
 
 class _HomeViewState extends State<HomeView> with WidgetsBindingObserver {
-  final FlutterSoundRecord _audioRecorder = FlutterSoundRecord();
+  late FlutterSoundRecord _audioRecorder;
+  late AudioPlayer _player;
+  late CancelToken _cancelToken;
   Timer? _ampTimer;
   Amplitude? _amplitude;
   int stopCount = 0;
   int validCount = 0; //有效语音时长
   int talkTime = 0;
   bool startSuccess = false;
-  final _player = AudioPlayer();
   double scaleWidth = 1;
-  final CancelToken _cancelToken = CancelToken();
-  final _audioResource = {
-    '谢谢您选择我们的产品，愿它为您带来持久的美丽，祝您永远保持健康与光彩！':
-        'https://resource.51ptt.net/ai/tts_output/zt_20231013163853.wav',
-    '感谢您购买我们的产品，希望它能让您更漂亮噢！祝您拥有美好的一天！':
-        'https://resource.51ptt.net/ai/tts_output/zt_20231013163945.wav',
-    '亲亲，感谢您的支持，愿我们的产品能令您焕发出独特的魅力，祝您美丽动人！':
-        'https://resource.51ptt.net/ai/tts_output/zt_20231013164024.wav',
-    '嗨，很高兴被你选中！非常感谢你的购买，祝你每天喜笑颜开！':
-        'https://resource.51ptt.net/ai/tts_output/zt_20231013164135.wav',
-    '亲爱的，感谢你为自己的美丽投资！衷心希望我们能让你每一天都光彩照人、自信满满！':
-        'https://resource.51ptt.net/ai/tts_output/zt_20231013164200.wav'
-  };
-
-  // final audioStart =
-  //     'https://ptt-resource.oss-cn-hangzhou.aliyuncs.com/ai/audios/sound_start.wav';
   final audioStart = 'assets/audio/sound_start.wav';
-
-  // final audioEnd =
-  //     'https://ptt-resource.oss-cn-hangzhou.aliyuncs.com/ai/audios/sound_end.mp3';
   int recording = 1; // 0:录音处理中 1:正在录音 2:录音失败
-
-  late String imageBg;
-  BuildContext? buildContext;
+  String imageBg =
+      'https://ptt-resource.oss-cn-hangzhou.aliyuncs.com/ptt/images/img_aidialog_bg.png';
+  String? currentAudioText;
+  bool openVolume = true; // 是否打开声音
 
   @override
   void initState() {
     super.initState();
+    _cancelToken = CancelToken();
+    _audioRecorder = FlutterSoundRecord();
+    _player = AudioPlayer();
+    openVolume = widget.openVolume ?? true;
     scaleWidth = widget.scaleWidth;
-    imageBg = widget.imageBg != null
-        ? widget.imageBg!
-        : 'https://ptt-resource.oss-cn-hangzhou.aliyuncs.com/ptt/images/img_aidialog_bg.png';
-    if (!imageBg.contains('time=')) {
-      imageBg =
-          '$imageBg?time=${widget.time ?? DateTime.now().millisecondsSinceEpoch}';
+    if (widget.imageBg != null) {
+      imageBg = widget.imageBg!;
     }
-    log(imageBg);
     WidgetsBinding.instance.addObserver(this);
     WidgetsBinding.instance.addPostFrameCallback((timeStamp) async {
-      //播放语音
-      buildContext = context;
-      if (widget.audioText != null) {
-        String? audioUrl;
-        var text = widget.audioText;
-        if (_audioResource.containsKey(text)) {
-          audioUrl = _audioResource[text];
-        } else {
-          audioUrl = await textToAudio(text);
-        }
-        if (audioUrl != null) {
-          await audioPlay(audioUrl, isNet: true, isAutoClose: true);
-          return;
+      if (mounted) {
+        if (widget.type == 1) {
+          List<String?>? audioUrlArray;
+          if (widget.audioUrlArray != null &&
+              widget.audioUrlArray?.isNotEmpty == true) {
+            audioUrlArray = widget.audioUrlArray;
+          } else {
+            audioUrlArray = await getAudioUrlArray();
+          }
+          await audioUrlArrayPlay(audioUrlArray);
+        } else if (widget.type == 0) {
+          await audioPlay(audioStart);
+          record();
         }
       }
-      await audioPlay(audioStart);
-      record();
     });
   }
 
@@ -118,37 +105,58 @@ class _HomeViewState extends State<HomeView> with WidgetsBindingObserver {
         package: 'ptt_ai_package',
       );
     }
-
+    await _player.setVolume(openVolume ? 1 : 0);
     await _player.play();
 
     //播放完是否自动关闭
-    if (isAutoClose && buildContext != null) {
-      Navigator.pop(buildContext!);
+    if (isAutoClose) {
+      navPopUp();
     }
   }
 
-  //文字转语音
-  Future<String?> textToAudio(text) async {
-    if (text != null) {
-      var params = {
-        'alpha': 1.15,
-        'gen_exp_name': 'zt',
-        'text': text,
-        'upload_oss': true
-      };
-      var resp = await Api.textToVoice(params, cancelToken: _cancelToken);
-      if (resp == null || resp.data == null) {
-        return null;
+  Future<List<String?>?> getAudioUrlArray() async {
+    final audioTextArray = widget.audioTextArray;
+    if (audioTextArray != null && audioTextArray.isNotEmpty) {
+      final audioUrlArray =
+          List<String?>.generate(audioTextArray.length, (_) => null);
+      final pathList = <AudioUrlModel>[];
+      for (int i = 0; i < audioTextArray.length; i++) {
+        if (Constant.audioResource.containsKey(audioTextArray[i])) {
+          audioUrlArray.setAll(i, [Constant.audioResource[audioTextArray[i]]]);
+        } else {
+          pathList.add(AudioUrlModel(index: i, path: audioTextArray[i]));
+        }
       }
-      var res = resp.data;
-      if (res["code"] == '10000') {
-        var result = res["res"];
-        if (result != null) {
-          return result;
+      final resList = await Api.textListToVoice(
+          audioPathList: pathList, cancelToken: _cancelToken);
+      if (resList != null) {
+        for (var element in resList) {
+          if (element.index != null) {
+            audioUrlArray.setAll(element.index!, [element.path]);
+          }
+        }
+      }
+      return audioUrlArray;
+    }
+    return null;
+  }
+
+  Future<void> audioUrlArrayPlay(List<String?>? audioUrlArray) async {
+    final audioTextArray = widget.audioTextArray;
+    if (audioUrlArray != null &&
+        audioTextArray != null &&
+        audioTextArray.isNotEmpty) {
+      for (var i = 0; i < audioUrlArray.length; i++) {
+        var audioUrl = audioUrlArray[i];
+        if (audioUrl != null) {
+          updateView(() {
+            currentAudioText = audioTextArray[i];
+          });
+          await audioPlay(audioUrl,
+              isNet: true, isAutoClose: (i + 1) == audioUrlArray.length);
         }
       }
     }
-    return null;
   }
 
   Future<void> record() async {
@@ -200,8 +208,7 @@ class _HomeViewState extends State<HomeView> with WidgetsBindingObserver {
       } else {
         Fluttertoast.showToast(msg: '请开启麦克风权限', gravity: ToastGravity.CENTER)
             .then((value) {
-          var nav = Navigator.of(context);
-          nav.pop({'errorMsg': '麦克风权限未打开', 'errorType': '1'});
+          navPopUp({'errorMsg': '麦克风权限未打开', 'errorType': '1'});
         });
       }
     } catch (e) {
@@ -209,24 +216,22 @@ class _HomeViewState extends State<HomeView> with WidgetsBindingObserver {
       if (e.runtimeType == PlatformException) {
         Fluttertoast.showToast(msg: '请开启麦克风权限', gravity: ToastGravity.CENTER)
             .then((value) {
-          var nav = Navigator.of(context);
-          nav.pop({'errorMsg': '麦克风权限未打开', 'errorType': '1'});
+          navPopUp({'errorMsg': '麦克风权限未打开', 'errorType': '1'});
         });
       }
     }
   }
 
   Future<void> stopRecorder() async {
-    var nav = Navigator.of(context);
     _ampTimer?.cancel();
     final String? path = await _audioRecorder.stop();
 
     if (validCount < 5) {
-      setState(() {
+      updateView(() {
         recording = 2;
       });
       Future.delayed(const Duration(seconds: 1)).then((value) {
-        setState(() {
+        updateView(() {
           recording = 1;
         });
         record();
@@ -238,7 +243,7 @@ class _HomeViewState extends State<HomeView> with WidgetsBindingObserver {
       var file = await dio.MultipartFile.fromFile(path);
       var formData = dio.FormData.fromMap({'file': file});
 
-      setState(() {
+      updateView(() {
         recording = 0;
       });
       var resp =
@@ -258,14 +263,14 @@ class _HomeViewState extends State<HomeView> with WidgetsBindingObserver {
         }
         if (soundRes.url != null && soundRes.url?.isNotEmpty == true) {
           recording = 0;
-          nav.pop(data);
+          navPopUp(data);
         } else {
           recording = 2;
         }
-        setState(() {});
+        updateView(() {});
         if (recording == 2) {
           Future.delayed(const Duration(seconds: 2)).then((value) {
-            setState(() {
+            updateView(() {
               recording = 1;
             });
             record();
@@ -274,27 +279,20 @@ class _HomeViewState extends State<HomeView> with WidgetsBindingObserver {
 
         // log(data);
       } else {
-        setState(() {
+        updateView(() {
           recording = 2;
         });
         // Fluttertoast.showToast(
         //     msg: res['msg'] ?? '服务出了点问题...', gravity: ToastGravity.CENTER);
         Future.delayed(const Duration(seconds: 2)).then((value) {
-          setState(() {
+          updateView(() {
             recording = 1;
           });
           record();
         });
       }
     } else {
-      nav.pop({'errorMsg': '录音出错', 'errorType': '0'});
-    }
-  }
-
-  void navPopUp() {
-    var canPop = Navigator.canPop(context);
-    if (canPop) {
-      Navigator.pop(context);
+      navPopUp({'errorMsg': '录音出错', 'errorType': '0'});
     }
   }
 
@@ -310,7 +308,7 @@ class _HomeViewState extends State<HomeView> with WidgetsBindingObserver {
               highlightColor: Colors.transparent,
               splashColor: Colors.transparent,
               onTap: () {
-                Navigator.pop(context);
+                navPopUp();
               },
               child: const SizedBox(
                 width: double.infinity,
@@ -339,10 +337,37 @@ class _HomeViewState extends State<HomeView> with WidgetsBindingObserver {
                   margin: EdgeInsets.symmetric(
                       horizontal: 18 * scaleWidth, vertical: 33 * scaleWidth),
                   child: Row(
+                    crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
-                      const Expanded(
+                      Expanded(
                         flex: 4,
-                        child: SizedBox(),
+                        child: Row(
+                          children: [
+                            InkWell(
+                              onTap: () {
+                                updateView(() {
+                                  openVolume = !openVolume;
+                                });
+                                _player.setVolume(openVolume ? 1 : 0);
+                              },
+                              child: Padding(
+                                padding: EdgeInsets.only(
+                                  left: 8 * scaleWidth,
+                                  top: 3 * scaleWidth,
+                                  bottom: 3 * scaleWidth,
+                                  right: 10 * scaleWidth,
+                                ),
+                                child: Icon(
+                                  openVolume
+                                      ? Icons.volume_up_rounded
+                                      : Icons.volume_off_rounded,
+                                  size: 22 * scaleWidth,
+                                  color: Colors.white,
+                                ),
+                              ),
+                            ),
+                          ],
+                        ),
                       ),
                       Expanded(
                         flex: 5,
@@ -354,7 +379,7 @@ class _HomeViewState extends State<HomeView> with WidgetsBindingObserver {
                               alignment: Alignment.topRight,
                               child: InkWell(
                                 onTap: () {
-                                  Navigator.pop(context);
+                                  navPopUp();
                                 },
                                 highlightColor: Colors.transparent,
                                 splashColor: Colors.transparent,
@@ -364,9 +389,9 @@ class _HomeViewState extends State<HomeView> with WidgetsBindingObserver {
                                 ),
                               ),
                             ),
-                            if (widget.audioText == null)
+                            if (widget.type == 0)
                               _rightRecordWidget()
-                            else
+                            else if (widget.type == 1)
                               _rightAudioTextWidget(),
                           ],
                         ),
@@ -402,7 +427,7 @@ class _HomeViewState extends State<HomeView> with WidgetsBindingObserver {
           ),
           FittedBox(
             child: Text(
-              widget.promotText ?? '“庭妹妹，请带我了解一下本月爆款”',
+              widget.promptText ?? '“庭妹妹，请带我了解一下本月爆款”',
               style: TextStyle(
                 color: Colors.white,
                 fontSize: 18 * scaleWidth,
@@ -422,7 +447,7 @@ class _HomeViewState extends State<HomeView> with WidgetsBindingObserver {
         child: Padding(
           padding: EdgeInsets.only(left: 8 * scaleWidth, right: 0 * scaleWidth),
           child: Text(
-            widget.audioText ?? '',
+            currentAudioText ?? '',
             style: TextStyle(
               color: Colors.white,
               fontSize: 16 * scaleWidth,
@@ -541,18 +566,10 @@ class _HomeViewState extends State<HomeView> with WidgetsBindingObserver {
     );
   }
 
-  void log(dynamic log) {
-    if (widget.isDebug) {
-      print('PTT_AI>>>>>>>>>>$log');
-    }
-  }
-
   @override
   void dispose() {
-    buildContext = null;
     _audioRecorder.dispose();
     _ampTimer?.cancel();
-
     if (_player.playing) {
       _player.stop();
     }
@@ -589,6 +606,20 @@ class _HomeViewState extends State<HomeView> with WidgetsBindingObserver {
       case AppLifecycleState.detached:
         // log('detached');
         break;
+      // case AppLifecycleState.hidden:
+      //   break;
+    }
+  }
+
+  void navPopUp([Map? result]) {
+    if (mounted) {
+      Navigator.pop(context, [result]);
+    }
+  }
+
+  void updateView(VoidCallback fn) {
+    if (mounted) {
+      setState(fn);
     }
   }
 }
