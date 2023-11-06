@@ -32,10 +32,14 @@ class _RecorderViewState extends State<RecorderView> with WidgetsBindingObserver
   bool startSuccess = false;
   final recordStart = 'https://ptt-resource.oss-cn-hangzhou.aliyuncs.com/coolella/images/image_recorder_start.png';
   final recordPause = 'https://ptt-resource.oss-cn-hangzhou.aliyuncs.com/coolella/images/image_recorder_pause.png';
+  final gifImage = 'https://ptt-resource.oss-cn-hangzhou.aliyuncs.com/coolella/images/ai_play.gif';
+  final _voiceIcon = 'https://ptt-resource.oss-cn-hangzhou.aliyuncs.com/coolella/images/icon_voice.png';
+  final _clearImage = 'https://ptt-resource.oss-cn-hangzhou.aliyuncs.com/coolella/images/icon_clear.png';
   var recording = false;
-  late Timer recordTimer;//录音计时器
-  int seconds = 0 ;//计时秒数
-  String showTimeStr = '00:00';
+  late Timer _recordTimer;//录音计时器
+  int _seconds = 0 ;//计时秒数
+  String _showTimeStr = '00:00';
+  String? _audioPath;//录音本地路径
 
   @override
   void initState() {
@@ -56,12 +60,12 @@ class _RecorderViewState extends State<RecorderView> with WidgetsBindingObserver
   }
 
   recordTimerStart(){
-    recordTimer = Timer.periodic(Duration(milliseconds: 1000), (timer) async {
+    _recordTimer = Timer.periodic(Duration(milliseconds: 1000), (timer) async {
       final isRecording = await _audioRecorder.isRecording();
       if(isRecording){
-        seconds ++ ;
-        int second = seconds % 60;
-        var minutes = seconds ~/ 60;
+        _seconds ++ ;
+        int second = _seconds % 60;
+        var minutes = _seconds ~/ 60;
         String secondStr = second.toString();
         String minuteStr = minutes.toString();
         if(second<10){
@@ -70,7 +74,7 @@ class _RecorderViewState extends State<RecorderView> with WidgetsBindingObserver
         if(minutes<10){
           minuteStr = '0' + minuteStr;
         }
-        showTimeStr = minuteStr + ':' + secondStr;
+        _showTimeStr = minuteStr + ':' + secondStr;
       };
     });
   }
@@ -126,11 +130,8 @@ class _RecorderViewState extends State<RecorderView> with WidgetsBindingObserver
 
   Future<void> uploadAudioFile() async {
 
-    final String? path = await _audioRecorder.stop();
-    recording = false;
-    startSuccess = false;
-    if (path != null && path!.isNotEmpty) {
-      audioPlay(path!);
+    if (_audioPath != null && _audioPath!.isNotEmpty) {
+
       // var file = await dio.MultipartFile.fromFile(path!);
       // var formData = dio.FormData.fromMap({'file': file});
       //
@@ -148,9 +149,48 @@ class _RecorderViewState extends State<RecorderView> with WidgetsBindingObserver
       // } else {
       //
       // }
+    }else if(startSuccess){
+      _audioPath = await _audioRecorder.stop();
+      if(_audioPath != null){
+        print('***********_audioPath:'+_audioPath!);
+      }else{
+        print('***********_audioPathnull');
+      }
+
+      recording = false;
+      startSuccess = false;
     } else {
-      navPopUp({'errorMsg': '录音出错', 'errorType': '0'});
+
     }
+  }
+
+  //删除录音
+  audioFileClearHandler(){
+    showDialog(context: context, builder: (context){
+      return AlertDialog(
+        content: Text('确定删除录音文件？'),
+        actions: [
+          TextButton(
+              onPressed: (){
+
+              },
+              child: Text('取消')
+          ),
+          TextButton(
+              onPressed: (){
+                if(_audioPath != null){
+                  _audioPath = null;
+                }
+              },
+              child: Text('确定')
+          ),
+        ],
+      );
+    });
+  }
+
+  audioPlayHandler(){
+    audioPlay(_audioPath!);
   }
 
   @override
@@ -181,7 +221,7 @@ class _RecorderViewState extends State<RecorderView> with WidgetsBindingObserver
                         style: TextStyle(fontSize: 15,fontWeight: FontWeight.bold,color: Colors.white)
                     ),
                   ),
-                  const Text('1.请保持环境安静，口吃清晰',
+                  const Text('1.请保持环境安静，语音清晰',
                       style: TextStyle(fontSize: 13,color: CupertinoColors.systemGrey)
                   ),
                   const Text('2.录制声音3-5分钟，中途可以点击暂停休息调整',
@@ -204,9 +244,58 @@ class _RecorderViewState extends State<RecorderView> with WidgetsBindingObserver
                 ],
               ),
               ),
+
+              Visibility(
+                  visible: _audioPath != null,
+                  child: Container(
+                    padding: EdgeInsets.all(5),
+                    margin: EdgeInsets.only(top: 15),
+                    decoration: BoxDecoration(
+                      borderRadius: BorderRadius.circular(4),
+                      color: Color(0xffaaaaaa),
+                    ),
+                    child: Row(
+                      crossAxisAlignment: CrossAxisAlignment.center,
+                      mainAxisSize:MainAxisSize.min,
+                      children: [
+                        InkWell(
+                          onTap: audioPlayHandler,
+                          child: Row(
+                            crossAxisAlignment: CrossAxisAlignment.center,
+                            mainAxisSize: MainAxisSize.min,
+                            children: [
+                              Image.network(_voiceIcon,
+                                width: 20,
+                                height: 20,
+                              ),
+                              SizedBox(width: 5,height: 5,),
+                              Text('01:08',
+                                style: TextStyle(
+                                    fontSize: 12,
+                                    color: Colors.white
+                                ),
+                              ),
+                              SizedBox(width: 5,height: 5,),
+                              Container(width: 1,height: 15,color: Colors.white,),
+                              SizedBox(width: 5,height: 5,),
+                            ],
+                          ),
+                        ),
+                        InkWell(
+                          onTap: audioFileClearHandler,
+                          child: Image.network(_clearImage,
+                            width: 15,
+                            height: 15,
+                          ),
+                        )
+
+                      ],
+                    ),
+                  ),
+              ),
               SizedBox(
                 width: 200,
-                height: 15,
+                height: 10,
               ),
               Expanded(
                 flex: 6,
@@ -217,15 +306,27 @@ class _RecorderViewState extends State<RecorderView> with WidgetsBindingObserver
                       style: TextStyle(fontSize: 13,color: Colors.white,overflow:TextOverflow.clip),
                       maxLines: 1,
                     ),
+                  Container(
+                    margin: EdgeInsets.only(top: 20),
+                    child:  Text(_showTimeStr,
+                      style: TextStyle(fontSize: 18,color: Colors.white,overflow:TextOverflow.clip),
+                      maxLines: 1,
+                    ),
+                  ),
                     Expanded(
                       child: Container(
                         margin: EdgeInsets.only(top: 20),
-                        child:  Text(showTimeStr,
-                          style: TextStyle(fontSize: 18,color: Colors.white,overflow:TextOverflow.clip),
-                          maxLines: 1,
+                        child:
+                        Visibility(
+                          visible: recording,
+                          child: Image.network(
+                            gifImage,
+                            width: 150,
+                            height: 50,
+                          ),
                         ),
                       ),
-                      flex: 1,
+                      flex: 2,
                     ),
                     Expanded(
                       child: Column(
@@ -233,8 +334,8 @@ class _RecorderViewState extends State<RecorderView> with WidgetsBindingObserver
                           InkWell(
                             child: Image.network(
                               recording ? recordPause : recordStart,
-                              width: 140,
-                              height: 140,
+                              width: 85,
+                              height: 85,
                             ),
                             onTap: recorderButtonClickHandler,
                           ),
@@ -248,7 +349,7 @@ class _RecorderViewState extends State<RecorderView> with WidgetsBindingObserver
                     ),
                   SizedBox(
                     width: 200,
-                    height: 20,
+                    height: 15,
                   ),
                     InkWell(
                       onTap: uploadAudioFile,
@@ -261,7 +362,7 @@ class _RecorderViewState extends State<RecorderView> with WidgetsBindingObserver
                         height: 48,
                         width: MediaQuery.of(context).size.width,
                         child: Text(
-                          '开始训练',
+                          _audioPath != null ? '开始训练' : '完成录音',
                           style: TextStyle(
                             fontSize: 18,
                             color: Colors.white,
@@ -291,6 +392,13 @@ class _RecorderViewState extends State<RecorderView> with WidgetsBindingObserver
       _player.stop();
     }
     _player.dispose();
+
+    //移除录音计时
+    if(_recordTimer != null && _recordTimer.isActive){
+      _recordTimer.cancel();
+    }
+
+
     super.dispose();
   }
 
