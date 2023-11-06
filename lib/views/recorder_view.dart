@@ -1,9 +1,9 @@
 import 'dart:async';
-import 'dart:ffi';
-
-import 'package:cached_network_image/cached_network_image.dart';
-import 'package:dio/dio.dart' as dio;
-import 'package:dio/dio.dart';
+// import 'dart:ffi';
+//
+// import 'package:cached_network_image/cached_network_image.dart';
+// import 'package:dio/dio.dart' as dio;
+// import 'package:dio/dio.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
@@ -11,8 +11,8 @@ import 'package:flutter_sound_record/flutter_sound_record.dart';
 import 'package:fluttertoast/fluttertoast.dart';
 import 'package:just_audio/just_audio.dart';
 
-import '../common/constant.dart';
-import '../http/api.dart';
+// import '../common/constant.dart';
+// import '../http/api.dart';
 import '../utils/file_util.dart';
 import '../utils/log_util.dart';
 
@@ -29,41 +29,47 @@ class RecorderView extends StatefulWidget {
 class _RecorderViewState extends State<RecorderView> with WidgetsBindingObserver {
   late FlutterSoundRecord _audioRecorder;
   late AudioPlayer _player;
-  bool startSuccess = false;
+  bool _startSuccess = false;
   final recordStart = 'https://ptt-resource.oss-cn-hangzhou.aliyuncs.com/coolella/images/image_recorder_start.png';
   final recordPause = 'https://ptt-resource.oss-cn-hangzhou.aliyuncs.com/coolella/images/image_recorder_pause.png';
   final gifImage = 'https://ptt-resource.oss-cn-hangzhou.aliyuncs.com/coolella/images/ai_play.gif';
   final _voiceIcon = 'https://ptt-resource.oss-cn-hangzhou.aliyuncs.com/coolella/images/icon_voice.png';
   final _clearImage = 'https://ptt-resource.oss-cn-hangzhou.aliyuncs.com/coolella/images/icon_clear.png';
-  var recording = false;
+  var _recording = false;
   late Timer _recordTimer;//录音计时器
   int _seconds = 0 ;//计时秒数
   String _showTimeStr = '00:00';
-  String? _audioPath;//录音本地路径
+  String? _audioFile;//录音文件
+  String? _audioFilePath;//录音本地路径
 
   @override
   void initState() {
     super.initState();
     _audioRecorder = FlutterSoundRecord();
     _player = AudioPlayer();
+    //计时器开启
+    recordTimerStart();
   }
 
-  Future<void> audioPlay(String url) async {
+  Future<void> audioPlay(String? url) async {
+
     if (_player.playing) {
       _player.stop();
     }
-    await _player.setAsset(
-      url,
-      package: 'ptt_ai_package',
-    );
-    await _player.play();
+    print('********audioPlay0');
+    if(url != null){
+      print('********audioPlay1:'+url);
+      await _player.setFilePath(url);
+      await _player.play();
+      print('********audioPlay');
+    }
   }
 
   recordTimerStart(){
     _recordTimer = Timer.periodic(Duration(milliseconds: 1000), (timer) async {
       final isRecording = await _audioRecorder.isRecording();
       if(isRecording){
-        _seconds ++ ;
+        _seconds = _seconds + 1;
         int second = _seconds % 60;
         var minutes = _seconds ~/ 60;
         String secondStr = second.toString();
@@ -74,7 +80,10 @@ class _RecorderViewState extends State<RecorderView> with WidgetsBindingObserver
         if(minutes<10){
           minuteStr = '0' + minuteStr;
         }
-        _showTimeStr = minuteStr + ':' + secondStr;
+        this.setState(() {
+          _showTimeStr = minuteStr + ':' + secondStr;
+        });
+
       };
     });
   }
@@ -82,7 +91,7 @@ class _RecorderViewState extends State<RecorderView> with WidgetsBindingObserver
   Future<void> startRecord() async {
     try {
       if (await _audioRecorder.hasPermission()) {
-
+        print('******startRecord0');
         final filePath = await createFileGetPath(
           fileName: 'tstAudio${DateTime.now().millisecondsSinceEpoch}.m4a',
           dirName: 'audio',
@@ -91,8 +100,12 @@ class _RecorderViewState extends State<RecorderView> with WidgetsBindingObserver
         await _audioRecorder.start(
           path: filePath,
         );
-        startSuccess = true;
-        recording = true;
+        _audioFilePath = filePath.toString();
+        _startSuccess = true;
+        print('******_audioFilePath:' + _audioFilePath!);
+        this.setState(() {
+          _recording = true;
+        });
       } else {
         Fluttertoast.showToast(msg: '请开启麦克风权限', gravity: ToastGravity.CENTER)
             .then((value) {
@@ -117,11 +130,16 @@ class _RecorderViewState extends State<RecorderView> with WidgetsBindingObserver
     if(isRecording){
       //暂停
       await _audioRecorder.pause();
-      recording = false;
+      this.setState(() {
+        _recording = false;
+      });
+
     }else if(isPaused){
       //恢复录音
       await _audioRecorder.resume();
-      recording = true;
+      this.setState(() {
+        _recording = true;
+      });
     }else{
       //开始录音
       startRecord();
@@ -130,7 +148,7 @@ class _RecorderViewState extends State<RecorderView> with WidgetsBindingObserver
 
   Future<void> uploadAudioFile() async {
 
-    if (_audioPath != null && _audioPath!.isNotEmpty) {
+    if (_audioFile != null && _audioFile!.isNotEmpty) {
 
       // var file = await dio.MultipartFile.fromFile(path!);
       // var formData = dio.FormData.fromMap({'file': file});
@@ -149,16 +167,22 @@ class _RecorderViewState extends State<RecorderView> with WidgetsBindingObserver
       // } else {
       //
       // }
-    }else if(startSuccess){
-      _audioPath = await _audioRecorder.stop();
-      if(_audioPath != null){
-        print('***********_audioPath:'+_audioPath!);
+    }else if(_startSuccess){
+
+      final path = await _audioRecorder.stop();
+      if(path != null){
+        this.setState(() {
+          _audioFile = path;
+        });
+        print('***********_audioPath:'+_audioFile!);
       }else{
         print('***********_audioPathnull');
       }
+      _startSuccess = false;
+      this.setState(() {
+        _recording = false;
+      });
 
-      recording = false;
-      startSuccess = false;
     } else {
 
     }
@@ -178,8 +202,10 @@ class _RecorderViewState extends State<RecorderView> with WidgetsBindingObserver
           ),
           TextButton(
               onPressed: (){
-                if(_audioPath != null){
-                  _audioPath = null;
+                if(_audioFile != null){
+                  this.setState(() {
+                    _audioFile = null;
+                  });
                 }
               },
               child: Text('确定')
@@ -190,7 +216,7 @@ class _RecorderViewState extends State<RecorderView> with WidgetsBindingObserver
   }
 
   audioPlayHandler(){
-    audioPlay(_audioPath!);
+    audioPlay(_audioFilePath);
   }
 
   @override
@@ -246,7 +272,7 @@ class _RecorderViewState extends State<RecorderView> with WidgetsBindingObserver
               ),
 
               Visibility(
-                  visible: _audioPath != null,
+                  visible: _audioFile != null,
                   child: Container(
                     padding: EdgeInsets.all(5),
                     margin: EdgeInsets.only(top: 15),
@@ -318,7 +344,7 @@ class _RecorderViewState extends State<RecorderView> with WidgetsBindingObserver
                         margin: EdgeInsets.only(top: 20),
                         child:
                         Visibility(
-                          visible: recording,
+                          visible: _recording,
                           child: Image.network(
                             gifImage,
                             width: 150,
@@ -333,13 +359,13 @@ class _RecorderViewState extends State<RecorderView> with WidgetsBindingObserver
                         children: [
                           InkWell(
                             child: Image.network(
-                              recording ? recordPause : recordStart,
+                              _recording ? recordPause : recordStart,
                               width: 85,
                               height: 85,
                             ),
                             onTap: recorderButtonClickHandler,
                           ),
-                          Text(recording ? '点击暂停录音':'点击开始录音',
+                          Text(_recording ? '点击暂停录音':'点击开始录音',
                             style: TextStyle(fontSize: 14,color: Colors.white),
                             maxLines: 1,
                           ),
@@ -362,7 +388,7 @@ class _RecorderViewState extends State<RecorderView> with WidgetsBindingObserver
                         height: 48,
                         width: MediaQuery.of(context).size.width,
                         child: Text(
-                          _audioPath != null ? '开始训练' : '完成录音',
+                          _audioFile != null ? '开始训练' : '完成录音',
                           style: TextStyle(
                             fontSize: 18,
                             color: Colors.white,
@@ -407,7 +433,7 @@ class _RecorderViewState extends State<RecorderView> with WidgetsBindingObserver
     super.didChangeAppLifecycleState(state);
     switch (state) {
       case AppLifecycleState.resumed:
-        if (startSuccess) {
+        if (_startSuccess) {
           final isPaused = await _audioRecorder.isPaused();
           if (isPaused) {
             _audioRecorder.resume();
@@ -417,7 +443,7 @@ class _RecorderViewState extends State<RecorderView> with WidgetsBindingObserver
         break;
       case AppLifecycleState.inactive:
       // log('进入后台');
-        if (startSuccess) {
+        if (_startSuccess) {
           try {
             final isRecording = await _audioRecorder.isRecording();
             if (isRecording) {
