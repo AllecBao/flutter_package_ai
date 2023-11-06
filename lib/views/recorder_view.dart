@@ -286,7 +286,9 @@ class _RecorderViewState extends State<RecorderView>
                           children: [
                             Text(
                               widget.recordExampleText ??
-                                  Constant.recordExampleText4,
+                                  Constant.recordExampleText4 +
+                                      Constant.recordExampleText5 +
+                                      Constant.recordExampleText6,
                               style: TextStyle(
                                   fontSize: 14 * scaleWidth,
                                   fontWeight: FontWeight.bold,
