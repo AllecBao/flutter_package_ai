@@ -13,7 +13,7 @@ import 'views/home_view.dart';
 /// {"isNativePage": 是否是web地址, "url": 路由地址}
 /// isDebug：
 /// scaleWidth: 实际尺寸与UI设计的比例
-/// type: 0:录音；1:播报语音
+/// type: 0:录音；1:播报语音; 3:录音生成模版语音
 /// openVolume: 是否打开声音
 Future<dynamic> showMainView(
   context, {
@@ -24,9 +24,28 @@ Future<dynamic> showMainView(
   List<String>? audioTextArray, //如果有值，则自动播放内容语音
   String? promptText, //弹框提示词
   String? imageBg, //背景图
+  String? recordExampleText, //录音生成模版语音的录音文本
+  String? userId, //录音生成模版语音的userId
   CancelToken? cancelToken,
 }) async {
   debug = isDebug;
+  if (type == 3) {
+    if (userId == null) {
+      return;
+    }
+    Navigator.push(
+        context,
+        MaterialPageRoute(
+            settings: const RouteSettings(name: '/ptt/recorderView'),
+            builder: (BuildContext context) {
+              return RecorderView(
+                userId: userId,
+                scaleWidth: scaleWidth,
+                recordExampleText: recordExampleText,
+              );
+            }));
+    return;
+  }
   List<String?>? audioUrlArray;
   if (type == 1) {
     if (audioTextArray != null && audioTextArray.isNotEmpty) {
@@ -77,10 +96,4 @@ Future<dynamic> showMainView(
           imageBg: imageBg,
         );
       });
-}
-
-goToRecorderView(context){
-  Navigator.push(context,MaterialPageRoute(builder: (BuildContext context){
-    return RecorderView();
-  }) );
 }

@@ -15,6 +15,17 @@ class Api {
     );
   }
 
+  /// 录音模型
+  static audioModelTrain(data, {CancelToken? cancelToken,required String userId}) async {
+    return await RequestService().fetchData(
+      method: 'file',
+      path: 'https://ai4090.51ptt.net:1111/rvc-train/tarinByUid?uid=$userId',
+      params: {},
+      data: data,
+      cancelToken: cancelToken,
+    );
+  }
+
   /// 文字转语音
   static Future<List<AudioUrlModel>?> textListToVoice({
     required List<AudioUrlModel> audioPathList,

@@ -53,7 +53,7 @@ class _MyAppState extends State<MyApp> {
                       cancelToken: cancelToken,
                     );
                   },
-                  child: const Text('点击弹出AI'),
+                  child: const Text('点击弹出AI语音播报'),
                 ),
                 ElevatedButton(
                   onPressed: () {
@@ -64,7 +64,12 @@ class _MyAppState extends State<MyApp> {
                 ),
                 ElevatedButton(
                   onPressed: () {
-                    goToRecorderView(ctx);
+                    showMainView(
+                      ctx,
+                      type: 3,
+                      isDebug: true,
+                      userId: '123123123'
+                    );
                   },
                   child: const Text('收集声音'),
                 ),
