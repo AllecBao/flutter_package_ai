@@ -1,4 +1,5 @@
 class Constant {
+  static const String package = 'ptt_ai_package';
   static const String appkey = 'tmm_app';
   static const String appsecret = 'tmm123321';
   static const String baseUrl = 'https://51ptt-gateway-v2.yuedaoec.com';

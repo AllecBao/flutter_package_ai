@@ -1,13 +1,13 @@
 import 'dart:async';
 
 import 'package:dio/dio.dart';
-import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_sound_record/flutter_sound_record.dart';
 import 'package:fluttertoast/fluttertoast.dart';
 import 'package:just_audio/just_audio.dart';
 import 'package:ptt_ai_package/common/constant.dart';
+import 'package:ptt_ai_package/utils/string_util.dart';
 
 import '../http/api.dart';
 import '../utils/file_util.dart';
@@ -46,6 +46,8 @@ class _RecorderViewState extends State<RecorderView>
       'https://ptt-resource.oss-cn-hangzhou.aliyuncs.com/coolella/images/icon_voice.png';
   final _clearImage =
       'https://ptt-resource.oss-cn-hangzhou.aliyuncs.com/coolella/images/icon_clear.png';
+  final bgTop =
+      'https://appstore.tinghao123.com/assets/images/ai/ai-bg-top.png';
   var _recording = false;
   late Timer _recordTimer; //录音计时器
   int _seconds = 0; //计时秒数
@@ -240,223 +242,285 @@ class _RecorderViewState extends State<RecorderView>
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-        backgroundColor: Colors.black87,
-        body: SafeArea(
-          child: Container(
-            padding: EdgeInsets.all(10 * scaleWidth),
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: <Widget>[
-                InkWell(
-                  onTap: navPopUp,
-                  child: Icon(
-                    Icons.arrow_back_ios,
-                    size: 30 * scaleWidth,
-                    color: Colors.white,
-                  ),
+      body: SafeArea(
+        top: false,
+        child: Container(
+          decoration: BoxDecoration(
+            gradient: LinearGradient(
+              colors: [
+                '#AFCDFF'.toColor(),
+                '#2F80ED'.toColor(),
+              ],
+              begin: Alignment.topCenter,
+              end: Alignment.bottomCenter,
+            ),
+          ),
+          // padding: EdgeInsets.all(10 * scaleWidth),
+          child: SafeArea(
+            top: true,
+            child: Stack(
+              children: [
+                Image.network(
+                  bgTop,
+                  width: double.infinity,
                 ),
-                Expanded(
-                  flex: 5,
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Container(
-                        margin: EdgeInsets.only(top: 15 * scaleWidth),
-                        child: Text(Constant.recordExampleText1,
-                            style: TextStyle(
-                                fontSize: 15 * scaleWidth,
-                                fontWeight: FontWeight.bold,
-                                color: Colors.white)),
+                Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: <Widget>[
+                    InkWell(
+                      onTap: navPopUp,
+                      child: Padding(
+                        padding: EdgeInsets.symmetric(
+                          horizontal: 16 * scaleWidth,
+                          vertical: 10 * scaleWidth,
+                        ),
+                        child: Icon(
+                          Icons.arrow_back_ios,
+                          size: 30 * scaleWidth,
+                          color: Colors.black87,
+                        ),
                       ),
-                      Text(Constant.recordExampleText2,
-                          style: TextStyle(
-                              fontSize: 13 * scaleWidth,
-                              color: CupertinoColors.systemGrey)),
-                      Text(Constant.recordExampleText3,
-                          style: TextStyle(
-                              fontSize: 13 * scaleWidth,
-                              color: CupertinoColors.systemGrey)),
-                      SizedBox(
-                        width: 200 * scaleWidth,
-                        height: 15 * scaleWidth,
+                    ),
+                    Expanded(
+                      flex: 5,
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        mainAxisSize: MainAxisSize.min,
+                        children: [
+                          Container(
+                            margin: EdgeInsets.only(
+                              top: 15 * scaleWidth,
+                              left: 24 * scaleWidth,
+                            ),
+                            child: Column(
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              mainAxisSize: MainAxisSize.min,
+                              children: [
+                                Text(Constant.recordExampleText1,
+                                    style: TextStyle(
+                                        fontSize: 16 * scaleWidth,
+                                        fontWeight: FontWeight.bold,
+                                        color: Colors.white)),
+                                Text(Constant.recordExampleText2,
+                                    style: TextStyle(
+                                        fontSize: 12 * scaleWidth,
+                                        color: Colors.white)),
+                                Text(Constant.recordExampleText3,
+                                    style: TextStyle(
+                                        fontSize: 12 * scaleWidth,
+                                        color: Colors.white)),
+                              ],
+                            ),
+                          ),
+                          SizedBox(
+                            width: 200 * scaleWidth,
+                            height: 15 * scaleWidth,
+                          ),
+                          Expanded(
+                            flex: 1,
+                            child: ListView(
+                              padding: EdgeInsets.symmetric(
+                                  horizontal: 24 * scaleWidth),
+                              children: [
+                                Text(
+                                  widget.recordExampleText ??
+                                      Constant.recordExampleText4 +
+                                          Constant.recordExampleText5 +
+                                          Constant.recordExampleText6,
+                                  style: TextStyle(
+                                      fontSize: 15 * scaleWidth,
+                                      fontWeight: FontWeight.bold,
+                                      color: Colors.white),
+                                )
+                              ],
+                            ),
+                          ),
+                        ],
                       ),
-                      Expanded(
-                        flex: 1,
-                        child: ListView(
+                    ),
+                    Visibility(
+                      visible: _audioFile != null,
+                      child: Container(
+                        padding: EdgeInsets.all(5 * scaleWidth),
+                        margin: EdgeInsets.only(
+                            top: 15 * scaleWidth, left: 8 * scaleWidth),
+                        decoration: BoxDecoration(
+                          borderRadius: BorderRadius.circular(4 * scaleWidth),
+                          color: Colors.white,
+                        ),
+                        child: Row(
+                          crossAxisAlignment: CrossAxisAlignment.center,
+                          mainAxisSize: MainAxisSize.min,
                           children: [
-                            Text(
-                              widget.recordExampleText ??
-                                  Constant.recordExampleText4 +
-                                      Constant.recordExampleText5 +
-                                      Constant.recordExampleText6,
-                              style: TextStyle(
-                                  fontSize: 14 * scaleWidth,
-                                  fontWeight: FontWeight.bold,
-                                  color: Colors.white),
+                            InkWell(
+                              onTap: audioPlayHandler,
+                              child: Row(
+                                crossAxisAlignment: CrossAxisAlignment.center,
+                                mainAxisSize: MainAxisSize.min,
+                                children: [
+                                  Image.network(
+                                    _voiceIcon,
+                                    width: 20 * scaleWidth,
+                                    height: 20 * scaleWidth,
+                                    color: Colors.black87,
+                                  ),
+                                  SizedBox(
+                                    width: 5 * scaleWidth,
+                                    height: 5 * scaleWidth,
+                                  ),
+                                  Text(
+                                    _showTimeStr,
+                                    style: TextStyle(
+                                      fontSize: 12 * scaleWidth,
+                                      color: Colors.black87,
+                                    ),
+                                  ),
+                                  SizedBox(
+                                    width: 5 * scaleWidth,
+                                    height: 5 * scaleWidth,
+                                  ),
+                                  Container(
+                                    width: 1 * scaleWidth,
+                                    height: 15 * scaleWidth,
+                                    color: Colors.black87,
+                                  ),
+                                  SizedBox(
+                                    width: 5 * scaleWidth,
+                                    height: 5 * scaleWidth,
+                                  ),
+                                ],
+                              ),
+                            ),
+                            InkWell(
+                              onTap: audioFileClearHandler,
+                              child: Image.network(
+                                _clearImage,
+                                width: 15 * scaleWidth,
+                                height: 15 * scaleWidth,
+                                color: Colors.black,
+                              ),
                             )
                           ],
                         ),
-                      )
-                    ],
-                  ),
-                ),
-                Visibility(
-                  visible: _audioFile != null,
-                  child: Container(
-                    padding: EdgeInsets.all(5 * scaleWidth),
-                    margin: EdgeInsets.only(top: 15 * scaleWidth),
-                    decoration: BoxDecoration(
-                      borderRadius: BorderRadius.circular(4 * scaleWidth),
-                      color: const Color(0xffaaaaaa),
+                      ),
                     ),
-                    child: Row(
-                      crossAxisAlignment: CrossAxisAlignment.center,
-                      mainAxisSize: MainAxisSize.min,
-                      children: [
-                        InkWell(
-                          onTap: audioPlayHandler,
-                          child: Row(
-                            crossAxisAlignment: CrossAxisAlignment.center,
-                            mainAxisSize: MainAxisSize.min,
-                            children: [
-                              Image.network(
-                                _voiceIcon,
-                                width: 20 * scaleWidth,
-                                height: 20 * scaleWidth,
-                              ),
-                              SizedBox(
-                                width: 5 * scaleWidth,
-                                height: 5 * scaleWidth,
-                              ),
-                              Text(
+                    SizedBox(
+                      width: 200 * scaleWidth,
+                      height: 10 * scaleWidth,
+                    ),
+                    Expanded(
+                      flex: 6,
+                      child: Container(
+                        decoration: BoxDecoration(
+                          gradient: LinearGradient(
+                            colors: [
+                              '#0068EC'.toColor(),
+                              '#87AFF3'.toColor(),
+                            ],
+                            begin: Alignment.topCenter,
+                            end: Alignment.bottomCenter,
+                          ),
+                          borderRadius: BorderRadius.vertical(
+                              top: Radius.circular(16 * scaleWidth)),
+                        ),
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.center,
+                          children: [
+                            // Text(
+                            //   '—  —  —  —  —  —  —  —  —  —  —  —  —  —  —  —  —  —  —  —  —  —  —  —  —  —  —  —  —  —  —  —  —  —  —  —  —  —',
+                            //   style: TextStyle(
+                            //       fontSize: 13 * scaleWidth,
+                            //       color: Colors.white,
+                            //       overflow: TextOverflow.clip),
+                            //   maxLines: 1,
+                            // ),
+                            Container(
+                              margin: EdgeInsets.only(top: 20 * scaleWidth),
+                              child: Text(
                                 _showTimeStr,
                                 style: TextStyle(
-                                    fontSize: 12 * scaleWidth,
-                                    color: Colors.white),
+                                    fontSize: 24 * scaleWidth,
+                                    color: Colors.white,
+                                    overflow: TextOverflow.clip),
+                                maxLines: 1,
                               ),
-                              SizedBox(
-                                width: 5 * scaleWidth,
-                                height: 5 * scaleWidth,
-                              ),
-                              Container(
-                                width: 1 * scaleWidth,
-                                height: 15 * scaleWidth,
-                                color: Colors.white,
-                              ),
-                              SizedBox(
-                                width: 5 * scaleWidth,
-                                height: 5 * scaleWidth,
-                              ),
-                            ],
-                          ),
-                        ),
-                        InkWell(
-                          onTap: audioFileClearHandler,
-                          child: Image.network(
-                            _clearImage,
-                            width: 15 * scaleWidth,
-                            height: 15 * scaleWidth,
-                          ),
-                        )
-                      ],
-                    ),
-                  ),
-                ),
-                SizedBox(
-                  width: 200 * scaleWidth,
-                  height: 10 * scaleWidth,
-                ),
-                Expanded(
-                  flex: 6,
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.center,
-                    children: [
-                      Text(
-                        '—  —  —  —  —  —  —  —  —  —  —  —  —  —  —  —  —  —  —  —  —  —  —  —  —  —  —  —  —  —  —  —  —  —  —  —  —  —',
-                        style: TextStyle(
-                            fontSize: 13 * scaleWidth,
-                            color: Colors.white,
-                            overflow: TextOverflow.clip),
-                        maxLines: 1,
-                      ),
-                      Container(
-                        margin: EdgeInsets.only(top: 20 * scaleWidth),
-                        child: Text(
-                          _showTimeStr,
-                          style: TextStyle(
-                              fontSize: 18 * scaleWidth,
-                              color: Colors.white,
-                              overflow: TextOverflow.clip),
-                          maxLines: 1,
-                        ),
-                      ),
-                      Expanded(
-                        flex: 2,
-                        child: Container(
-                          margin: EdgeInsets.only(top: 20 * scaleWidth),
-                          child: Visibility(
-                            visible: _recording,
-                            child: Image.network(
-                              gifImage,
-                              width: 150 * scaleWidth,
-                              height: 50 * scaleWidth,
                             ),
-                          ),
-                        ),
-                      ),
-                      Expanded(
-                        flex: 3,
-                        child: Column(
-                          children: [
+                            Expanded(
+                              flex: 2,
+                              child: Container(
+                                margin: EdgeInsets.only(top: 20 * scaleWidth),
+                                child: Visibility(
+                                  visible: _recording,
+                                  child: Image.network(
+                                    gifImage,
+                                    width: 150 * scaleWidth,
+                                    height: 50 * scaleWidth,
+                                  ),
+                                ),
+                              ),
+                            ),
+                            Expanded(
+                              flex: 3,
+                              child: Column(
+                                children: [
+                                  InkWell(
+                                    onTap: recorderButtonClickHandler,
+                                    child: Image.network(
+                                      _recording ? recordPause : recordStart,
+                                      width: 85 * scaleWidth,
+                                      height: 85 * scaleWidth,
+                                    ),
+                                  ),
+                                  Text(
+                                    _recording ? '点击暂停录音' : '点击开始录音',
+                                    style: TextStyle(
+                                        fontSize: 14 * scaleWidth,
+                                        color: Colors.white),
+                                    maxLines: 1,
+                                  ),
+                                ],
+                              ),
+                            ),
+                            SizedBox(
+                              width: 200 * scaleWidth,
+                              height: 15 * scaleWidth,
+                            ),
                             InkWell(
-                              onTap: recorderButtonClickHandler,
-                              child: Image.network(
-                                _recording ? recordPause : recordStart,
-                                width: 85 * scaleWidth,
-                                height: 85 * scaleWidth,
+                              onTap: uploadAudioFile,
+                              child: Container(
+                                alignment: Alignment.center,
+                                margin: EdgeInsets.symmetric(
+                                  horizontal: 12 * scaleWidth,
+                                  vertical: 8 * scaleWidth,
+                                ),
+                                decoration: BoxDecoration(
+                                    borderRadius:
+                                        BorderRadius.circular(24 * scaleWidth),
+                                    color: Colors.white),
+                                height: 48 * scaleWidth,
+                                width: MediaQuery.of(context).size.width,
+                                child: Text(
+                                  _audioFile != null ? '开始训练' : '完成录音',
+                                  style: TextStyle(
+                                    fontSize: 18 * scaleWidth,
+                                    color: Colors.black87,
+                                    fontWeight: FontWeight.bold,
+                                  ),
+                                ),
                               ),
-                            ),
-                            Text(
-                              _recording ? '点击暂停录音' : '点击开始录音',
-                              style: TextStyle(
-                                  fontSize: 14 * scaleWidth,
-                                  color: Colors.white),
-                              maxLines: 1,
-                            ),
+                            )
                           ],
                         ),
                       ),
-                      SizedBox(
-                        width: 200 * scaleWidth,
-                        height: 15 * scaleWidth,
-                      ),
-                      InkWell(
-                        onTap: uploadAudioFile,
-                        child: Container(
-                          alignment: Alignment.center,
-                          decoration: BoxDecoration(
-                              borderRadius:
-                                  BorderRadius.circular(24 * scaleWidth),
-                              color: const Color(0xff432AD3)),
-                          height: 48,
-                          width: MediaQuery.of(context).size.width,
-                          child: Text(
-                            _audioFile != null ? '开始训练' : '完成录音',
-                            style: TextStyle(
-                              fontSize: 18 * scaleWidth,
-                              color: Colors.white,
-                              fontWeight: FontWeight.bold,
-                            ),
-                          ),
-                        ),
-                      )
-                    ],
-                  ),
+                    ),
+                  ],
                 ),
               ],
             ),
           ),
-        ));
+        ),
+      ),
+    );
   }
 
   @override
