@@ -553,7 +553,7 @@ class _HomeViewState extends State<HomeView> with WidgetsBindingObserver {
   Widget _recordFailWidget() {
     return Center(
       child: Text(
-        '没找到您想要的结果',
+        recording == 10 ? '' : '没找到您想要的结果',
         style: TextStyle(
           color: Colors.white,
           fontSize: 16 * sw,
@@ -574,8 +574,7 @@ class _HomeViewState extends State<HomeView> with WidgetsBindingObserver {
         if (widget.type == 0) _state0LeftBigImageWidget(),
         if (widget.type == 1)
           Padding(
-            padding:
-                EdgeInsets.only(left: 44 * sw, bottom: 22 * sw),
+            padding: EdgeInsets.only(left: 44 * sw, bottom: 22 * sw),
             child: Image.asset(
               // 'assets/images/gif_speek.gif',
               'assets/images/gif_handle.gif',
@@ -585,8 +584,7 @@ class _HomeViewState extends State<HomeView> with WidgetsBindingObserver {
           ),
         if (widget.type == 0)
           Padding(
-            padding:
-                EdgeInsets.only(left: 66 * sw, top: 130 * sw),
+            padding: EdgeInsets.only(left: 66 * sw, top: 130 * sw),
             child: Image.asset(
               'assets/images/img_aidialog_status_bg.png',
               package: Constant.package,
@@ -595,10 +593,11 @@ class _HomeViewState extends State<HomeView> with WidgetsBindingObserver {
           ),
         if (widget.type == 0)
           Padding(
-            padding:
-                EdgeInsets.only(left: 80 * sw, top: 129 * sw),
+            padding: EdgeInsets.only(left: 80 * sw, top: 129 * sw),
             child: Text(
-              recording == 0 ? '处理中,稍等哦~' : '庭MM正在听',
+              recording == 0
+                  ? '处理中,稍等哦~'
+                  : (recording == 10 ? '庭MM正在说' : '庭MM正在听'),
               style: TextStyle(color: Colors.white, fontSize: 9 * sw),
             ),
           ),
@@ -609,8 +608,7 @@ class _HomeViewState extends State<HomeView> with WidgetsBindingObserver {
   _state0LeftBigImageWidget() {
     if (recording == 0) {
       return Padding(
-        padding:
-            EdgeInsets.only(left: 44 * sw, bottom: 22 * sw),
+        padding: EdgeInsets.only(left: 44 * sw, bottom: 22 * sw),
         child: Image.asset(
           'assets/images/gif_handle.gif',
           package: Constant.package,
@@ -620,8 +618,7 @@ class _HomeViewState extends State<HomeView> with WidgetsBindingObserver {
     }
     if (recording == 10) {
       return Padding(
-        padding:
-            EdgeInsets.only(left: 76 * sw, bottom: 22 * sw),
+        padding: EdgeInsets.only(left: 76 * sw, bottom: 22 * sw),
         child: Image.asset(
           'assets/images/gif_speek.gif',
           package: Constant.package,
