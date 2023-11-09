@@ -574,12 +574,12 @@ class _HomeViewState extends State<HomeView> with WidgetsBindingObserver {
         if (widget.type == 0) _state0LeftBigImageWidget(),
         if (widget.type == 1)
           Padding(
-            padding: EdgeInsets.only(left: 44 * sw, bottom: 22 * sw),
+            padding: EdgeInsets.only(left: 76 * sw, bottom: 22 * sw),
             child: Image.asset(
-              // 'assets/images/gif_speek.gif',
-              'assets/images/gif_handle.gif',
+              'assets/images/gif_speek.gif',
+              // 'assets/images/gif_handle.gif',
               package: Constant.package,
-              width: 140 * sw,
+              width: 80 * sw,
             ),
           ),
         if (widget.type == 0)
