@@ -1,6 +1,5 @@
 import 'dart:async';
 
-import 'package:cached_network_image/cached_network_image.dart';
 import 'package:dio/dio.dart' as dio;
 import 'package:dio/dio.dart';
 import 'package:flutter/cupertino.dart';
@@ -53,11 +52,11 @@ class _HomeViewState extends State<HomeView> with WidgetsBindingObserver {
   int validCount = 0; //有效语音时长
   int talkTime = 0;
   bool startSuccess = false;
-  double scaleWidth = 1;
+  double sw = 1;
   final audioStart = 'assets/audio/sound_start.wav';
-  int recording = 1; // 0:录音处理中 1:正在录音 2:录音失败
-  String imageBg =
-      'https://ptt-resource.oss-cn-hangzhou.aliyuncs.com/ptt/images/img_aidialog_bg.png';
+  int recording = 1; // 0:录音处理中 1:正在录音 2:录音失败; 10:播放语音
+  // String imageBg =
+  //     'https://ptt-resource.oss-cn-hangzhou.aliyuncs.com/ptt/images/img_aidialog_bg.png';
   String? currentAudioText;
   bool openVolume = true; // 是否打开声音
 
@@ -68,10 +67,10 @@ class _HomeViewState extends State<HomeView> with WidgetsBindingObserver {
     _audioRecorder = FlutterSoundRecord();
     _player = AudioPlayer();
     openVolume = widget.openVolume ?? true;
-    scaleWidth = widget.scaleWidth;
-    if (widget.imageBg != null) {
-      imageBg = widget.imageBg!;
-    }
+    sw = widget.scaleWidth;
+    // if (widget.imageBg != null) {
+    //   imageBg = widget.imageBg!;
+    // }
     WidgetsBinding.instance.addObserver(this);
     WidgetsBinding.instance.addPostFrameCallback((timeStamp) async {
       if (mounted) {
@@ -259,6 +258,9 @@ class _HomeViewState extends State<HomeView> with WidgetsBindingObserver {
         var data = {"isNativePage": soundRes.nativePage, "url": soundRes.url};
         if (soundRes.wavUrl != null && soundRes.wavUrl?.isNotEmpty == true) {
           //如果需要播放语音，先播放语音
+          updateView(() {
+            recording = 10;
+          });
           await audioPlay(soundRes.wavUrl!, isNet: true);
         }
         if (soundRes.url != null && soundRes.url?.isNotEmpty == true) {
@@ -315,18 +317,7 @@ class _HomeViewState extends State<HomeView> with WidgetsBindingObserver {
                 height: double.infinity,
               ),
             ),
-            IgnorePointer(
-              child: Container(
-                decoration: BoxDecoration(
-                  borderRadius: BorderRadius.all(
-                    Radius.circular(10 * scaleWidth),
-                  ),
-                  image: DecorationImage(
-                    image: CachedNetworkImageProvider(imageBg),
-                  ),
-                ),
-              ),
-            ),
+            IgnorePointer(child: _bgStatusWidget()),
             AspectRatio(
               aspectRatio: 3 / 2,
               child: InkWell(
@@ -335,7 +326,7 @@ class _HomeViewState extends State<HomeView> with WidgetsBindingObserver {
                 splashColor: Colors.transparent,
                 child: Container(
                   margin: EdgeInsets.symmetric(
-                      horizontal: 18 * scaleWidth, vertical: 33 * scaleWidth),
+                      horizontal: 18 * sw, vertical: 33 * sw),
                   child: Row(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
@@ -352,16 +343,16 @@ class _HomeViewState extends State<HomeView> with WidgetsBindingObserver {
                               },
                               child: Padding(
                                 padding: EdgeInsets.only(
-                                  left: 8 * scaleWidth,
-                                  top: 3 * scaleWidth,
-                                  bottom: 3 * scaleWidth,
-                                  right: 10 * scaleWidth,
+                                  left: 8 * sw,
+                                  top: 3 * sw,
+                                  bottom: 3 * sw,
+                                  right: 10 * sw,
                                 ),
                                 child: Icon(
                                   openVolume
                                       ? Icons.volume_up_rounded
                                       : Icons.volume_off_rounded,
-                                  size: 22 * scaleWidth,
+                                  size: 22 * sw,
                                   color: Colors.white,
                                 ),
                               ),
@@ -371,8 +362,8 @@ class _HomeViewState extends State<HomeView> with WidgetsBindingObserver {
                       ),
                       Expanded(
                         flex: 5,
-                        child: Column(
-                          mainAxisAlignment: MainAxisAlignment.start,
+                        child: Stack(
+                          // mainAxisAlignment: MainAxisAlignment.start,
                           children: [
                             Container(
                               width: double.infinity,
@@ -384,8 +375,8 @@ class _HomeViewState extends State<HomeView> with WidgetsBindingObserver {
                                 highlightColor: Colors.transparent,
                                 splashColor: Colors.transparent,
                                 child: SizedBox(
-                                  width: 46 * scaleWidth,
-                                  height: 26 * scaleWidth,
+                                  width: 46 * sw,
+                                  height: 26 * sw,
                                 ),
                               ),
                             ),
@@ -397,7 +388,7 @@ class _HomeViewState extends State<HomeView> with WidgetsBindingObserver {
                         ),
                       ),
                       SizedBox(
-                        width: 5 * scaleWidth,
+                        width: 5 * sw,
                       ),
                     ],
                   ),
@@ -415,22 +406,23 @@ class _HomeViewState extends State<HomeView> with WidgetsBindingObserver {
       child: Column(
         mainAxisSize: MainAxisSize.min,
         children: [
+          SizedBox(height: 26 * sw),
           Text(
             '你可以这样说',
             style: TextStyle(
               color: Colors.white,
-              fontSize: 16 * scaleWidth,
+              fontSize: 16 * sw,
             ),
           ),
           SizedBox(
-            height: 14 * scaleWidth,
+            height: 14 * sw,
           ),
           FittedBox(
             child: Text(
               widget.promptText ?? '“庭妹妹，请带我了解一下本月爆款”',
               style: TextStyle(
                 color: Colors.white,
-                fontSize: 18 * scaleWidth,
+                fontSize: 18 * sw,
                 fontWeight: FontWeight.bold,
               ),
             ),
@@ -445,12 +437,16 @@ class _HomeViewState extends State<HomeView> with WidgetsBindingObserver {
     return Expanded(
       child: Center(
         child: Padding(
-          padding: EdgeInsets.only(left: 8 * scaleWidth, right: 0 * scaleWidth),
+          padding: EdgeInsets.only(
+            left: 8 * sw,
+            right: 0 * sw,
+            bottom: 19 * sw,
+          ),
           child: Text(
             currentAudioText ?? '',
             style: TextStyle(
               color: Colors.white,
-              fontSize: 16 * scaleWidth,
+              fontSize: 16 * sw,
             ),
           ),
         ),
@@ -463,12 +459,12 @@ class _HomeViewState extends State<HomeView> with WidgetsBindingObserver {
       return _recordingWidget();
     } else if (recording == 0) {
       return Padding(
-        padding: EdgeInsets.only(bottom: 18 * scaleWidth),
+        padding: EdgeInsets.only(bottom: 18 * sw),
         child: _recordHandleWidget(),
       );
     } else {
       return Padding(
-        padding: EdgeInsets.only(bottom: 18 * scaleWidth),
+        padding: EdgeInsets.only(bottom: 18 * sw),
         child: _recordFailWidget(),
       );
     }
@@ -481,8 +477,9 @@ class _HomeViewState extends State<HomeView> with WidgetsBindingObserver {
         children: [
           Image.asset(
             'assets/images/ai_play.gif',
+            // 'assets/images/gif_speek.gif',
             package: 'ptt_ai_package',
-            height: 35 * scaleWidth,
+            height: 35 * sw,
             fit: BoxFit.contain,
           ),
           InkWell(
@@ -496,8 +493,8 @@ class _HomeViewState extends State<HomeView> with WidgetsBindingObserver {
             splashColor: Colors.transparent,
             child: Container(
                 margin: const EdgeInsets.only(top: 2),
-                height: 38 * scaleWidth,
-                width: 80 * scaleWidth,
+                height: 38 * sw,
+                width: 80 * sw,
                 decoration: BoxDecoration(
                     borderRadius: BorderRadius.circular(29),
                     gradient: LinearGradient(
@@ -538,13 +535,13 @@ class _HomeViewState extends State<HomeView> with WidgetsBindingObserver {
             color: Colors.white,
           ),
           SizedBox(
-            width: 5 * scaleWidth,
+            width: 5 * sw,
           ),
           Text(
             '处理中...',
             style: TextStyle(
               color: Colors.white,
-              fontSize: 16 * scaleWidth,
+              fontSize: 16 * sw,
               fontWeight: FontWeight.normal,
             ),
           ),
@@ -559,9 +556,85 @@ class _HomeViewState extends State<HomeView> with WidgetsBindingObserver {
         '没找到您想要的结果',
         style: TextStyle(
           color: Colors.white,
-          fontSize: 16 * scaleWidth,
+          fontSize: 16 * sw,
           fontWeight: FontWeight.normal,
         ),
+      ),
+    );
+  }
+
+  Widget _bgStatusWidget() {
+    return Stack(
+      alignment: AlignmentDirectional.centerStart,
+      children: [
+        Image.asset(
+          'assets/images/img_aidialog_bg.png',
+          package: Constant.package,
+        ),
+        if (widget.type == 0) _state0LeftBigImageWidget(),
+        if (widget.type == 1)
+          Padding(
+            padding:
+                EdgeInsets.only(left: 44 * sw, bottom: 22 * sw),
+            child: Image.asset(
+              // 'assets/images/gif_speek.gif',
+              'assets/images/gif_handle.gif',
+              package: Constant.package,
+              width: 140 * sw,
+            ),
+          ),
+        if (widget.type == 0)
+          Padding(
+            padding:
+                EdgeInsets.only(left: 66 * sw, top: 130 * sw),
+            child: Image.asset(
+              'assets/images/img_aidialog_status_bg.png',
+              package: Constant.package,
+              height: 18 * sw,
+            ),
+          ),
+        if (widget.type == 0)
+          Padding(
+            padding:
+                EdgeInsets.only(left: 80 * sw, top: 129 * sw),
+            child: Text(
+              recording == 0 ? '处理中,稍等哦~' : '庭MM正在听',
+              style: TextStyle(color: Colors.white, fontSize: 9 * sw),
+            ),
+          ),
+      ],
+    );
+  }
+
+  _state0LeftBigImageWidget() {
+    if (recording == 0) {
+      return Padding(
+        padding:
+            EdgeInsets.only(left: 44 * sw, bottom: 22 * sw),
+        child: Image.asset(
+          'assets/images/gif_handle.gif',
+          package: Constant.package,
+          width: 140 * sw,
+        ),
+      );
+    }
+    if (recording == 10) {
+      return Padding(
+        padding:
+            EdgeInsets.only(left: 76 * sw, bottom: 22 * sw),
+        child: Image.asset(
+          'assets/images/gif_speek.gif',
+          package: Constant.package,
+          width: 80 * sw,
+        ),
+      );
+    }
+    return Padding(
+      padding: EdgeInsets.only(left: 76 * sw, bottom: 35 * sw),
+      child: Image.asset(
+        'assets/images/img_aidialog_character.png',
+        package: Constant.package,
+        width: 85 * sw,
       ),
     );
   }

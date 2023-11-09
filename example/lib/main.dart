@@ -49,7 +49,7 @@ class _MyAppState extends State<MyApp> {
                         scaleWidth: ScreenUtil().scaleWidth,
                       );
                     },
-                    child: const Text('点击弹出AI说话后回答'),
+                    child: const Text('说话后AI回答'),
                   ),
                   ElevatedButton(
                     onPressed: () {
@@ -71,7 +71,7 @@ class _MyAppState extends State<MyApp> {
                         scaleWidth: ScreenUtil().scaleWidth,
                       );
                     },
-                    child: const Text('点击弹出AI语音播报'),
+                    child: const Text('AI语音播报'),
                   ),
                   ElevatedButton(
                     onPressed: () {
