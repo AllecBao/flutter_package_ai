@@ -676,7 +676,7 @@ class _HomeViewState extends State<HomeView> with WidgetsBindingObserver {
 
   void navPopUp([Map? result]) {
     if (mounted) {
-      Navigator.pop(context, [result]);
+      Navigator.pop(context, result);
     }
   }
 
