@@ -278,14 +278,10 @@ class _HomeViewState extends State<HomeView> with WidgetsBindingObserver {
             record();
           });
         }
-
-        // log(data);
       } else {
         updateView(() {
           recording = 2;
         });
-        // Fluttertoast.showToast(
-        //     msg: res['msg'] ?? '服务出了点问题...', gravity: ToastGravity.CENTER);
         Future.delayed(const Duration(seconds: 2)).then((value) {
           updateView(() {
             recording = 1;
