@@ -358,8 +358,8 @@ class _HomeViewState extends State<HomeView> with WidgetsBindingObserver {
                       ),
                       Expanded(
                         flex: 5,
-                        child: Stack(
-                          // mainAxisAlignment: MainAxisAlignment.start,
+                        child: Column(
+                          mainAxisAlignment: MainAxisAlignment.start,
                           children: [
                             Container(
                               width: double.infinity,
@@ -402,7 +402,6 @@ class _HomeViewState extends State<HomeView> with WidgetsBindingObserver {
       child: Column(
         mainAxisSize: MainAxisSize.min,
         children: [
-          SizedBox(height: 26 * sw),
           Text(
             '你可以这样说',
             style: TextStyle(
@@ -431,19 +430,17 @@ class _HomeViewState extends State<HomeView> with WidgetsBindingObserver {
 
   Widget _rightAudioTextWidget() {
     return Expanded(
-      child: Center(
-        child: Padding(
-          padding: EdgeInsets.only(
-            left: 8 * sw,
-            right: 0 * sw,
-            bottom: 19 * sw,
-          ),
-          child: Text(
-            currentAudioText ?? '',
-            style: TextStyle(
-              color: Colors.white,
-              fontSize: 16 * sw,
-            ),
+      child: Padding(
+        padding: EdgeInsets.only(
+          left: 8 * sw,
+          right: 0 * sw,
+          top: 16 * sw
+        ),
+        child: Text(
+          currentAudioText ?? '',
+          style: TextStyle(
+            color: Colors.white,
+            fontSize: 16 * sw,
           ),
         ),
       ),
